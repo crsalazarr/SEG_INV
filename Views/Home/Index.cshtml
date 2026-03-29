@@ -1,0 +1,449 @@
+﻿@{
+    ViewData["Title"] = "Iniciar Sesión";
+    Layout = null; // Sin layout para el login
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SEG INV</title>
+
+    @* ─── ESTILOS PERSONALIZADOS (mismo estilo que Compras/Bodega) ─── *@
+    <style>
+        :root {
+            --color-bg: #0f1117;
+            --color-surface: #1a1d27;
+            --color-surface2: #21253a;
+            --color-border: #2e3350;
+            --color-accent: #4f8ef7;
+            --color-accent2: #7c5cfc;
+            --color-success: #22c55e;
+            --color-danger: #ef4444;
+            --color-warning: #f59e0b;
+            --color-text: #e2e8f0;
+            --color-muted: #7b87a0;
+            --radius: 16px;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--color-bg);
+            color: var(--color-text);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Fondo con efecto gradiente y blur */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 50%, rgba(79, 142, 247, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 50%, rgba(124, 92, 252, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        /* ── CARD DE LOGIN ── */
+        .login-wrapper {
+            width: 100%;
+            max-width: 460px;
+            padding: 1.5rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .login-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            padding: 2.5rem 2rem;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ── LOGO / TÍTULO ── */
+        .login-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .login-header .brand {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header .brand span {
+            color: var(--color-accent);
+            background: linear-gradient(135deg, var(--color-accent), var(--color-accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .login-header .subtitle {
+            color: var(--color-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* ── FORMULARIOS (mismos estilos) ── */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--color-muted);
+            margin-bottom: 0.3rem;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .form-control-dark {
+            width: 100%;
+            padding: 0.9rem 1.2rem;
+            border-radius: 10px;
+            background: var(--color-surface2);
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-control-dark:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 3px rgba(79, 142, 247, 0.2);
+        }
+
+        .form-control-dark::placeholder {
+            color: var(--color-muted);
+            opacity: 0.4;
+        }
+
+        /* ── BOTÓN PRINCIPAL ── */
+        .btn-login {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, var(--color-accent), var(--color-accent2));
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(79, 142, 247, 0.4);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.4s, height 0.4s;
+        }
+
+        .btn-login:active::after {
+            width: 200px;
+            height: 200px;
+        }
+
+        /* ── ALERTAS ── */
+        .alert-custom {
+            padding: 1rem 1.25rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @@keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+        }
+
+        .alert-success {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            color: #86efac;
+        }
+
+        /* ── ENLACES Y EXTRAS ── */
+        .login-footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--color-muted);
+            font-size: 0.85rem;
+        }
+
+        .login-footer a {
+            color: var(--color-accent);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .login-footer a:hover {
+            color: var(--color-accent2);
+            text-decoration: underline;
+        }
+
+        /* ── CHECKBOX PERSONALIZADO ── */
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .checkbox-custom {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--color-border);
+            border-radius: 4px;
+            background: var(--color-surface2);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        input[type="checkbox"] {
+            display: none;
+        }
+
+        input[type="checkbox"]:checked + .checkbox-custom {
+            background: var(--color-accent);
+            border-color: var(--color-accent);
+        }
+
+        input[type="checkbox"]:checked + .checkbox-custom::after {
+            content: '✓';
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .checkbox-label {
+            color: var(--color-muted);
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        /* ── DECORACIONES ── */
+        .decor-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-accent), var(--color-accent2));
+            opacity: 0.1;
+            filter: blur(60px);
+            z-index: 1;
+        }
+
+        .circle-1 {
+            width: 300px;
+            height: 300px;
+            top: -100px;
+            left: -100px;
+        }
+
+        .circle-2 {
+            width: 400px;
+            height: 400px;
+            bottom: -150px;
+            right: -150px;
+            background: linear-gradient(135deg, var(--color-accent2), var(--color-accent));
+        }
+
+        /* ── ICONOS ── */
+        .input-icon {
+            position: relative;
+        }
+
+        .input-icon .icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-muted);
+            font-size: 1.2rem;
+        }
+
+        .input-icon .form-control-dark {
+            padding-left: 2.8rem;
+        }
+
+        /* ── RESPONSIVE ── */
+        @@media (max-width: 480px) {
+            .login-wrapper {
+                padding: 1rem;
+            }
+            
+            .login-card {
+                padding: 2rem 1.5rem;
+            }
+            
+            .login-header .brand {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    @* Elementos decorativos de fondo *@
+    <div class="decor-circle circle-1"></div>
+    <div class="decor-circle circle-2"></div>
+
+    <div class="login-wrapper">
+        <div class="login-card">
+
+            @* ── HEADER ── *@
+            <div class="login-header">
+                <div class="brand">
+                    SEG <span>INV</span>
+                </div>
+                <div class="subtitle">Sistema de Gestión</div>
+            </div>
+
+            @* ── ALERTAS ── *@
+          @if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert-custom alert-danger">
+        <span style="font-size: 1.2rem;">❌</span>
+        <span>@TempData["ErrorMessage"]</span>
+    </div>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert-custom alert-success">
+        <span style="font-size: 1.2rem;">✅</span>
+        <span>@TempData["SuccessMessage"]</span>
+    </div>
+}
+
+            @* ── FORMULARIO DE LOGIN ── *@
+            <form method="post" action="@Url.Action("Login", "Account")">
+                @Html.AntiForgeryToken()
+
+                <div class="form-group">
+                    <label class="form-label">Usuario</label>
+                    <div class="input-icon">
+                        <span class="icon">👤</span>
+                        <input type="text" name="username" class="form-control-dark" 
+                               placeholder="Ingresa tu usuario" required autofocus />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Contraseña</label>
+                    <div class="input-icon">
+                        <span class="icon">🔒</span>
+                        <input type="password" name="password" class="form-control-dark" 
+                               placeholder="Ingresa tu contraseña" required />
+                    </div>
+                </div>
+
+                @* Opciones adicionales *@
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="remember" name="remember" />
+                        <label for="remember" class="checkbox-custom"></label>
+                        <label for="remember" class="checkbox-label">Recordarme</label>
+                    </div>
+                    <a href="#" style="color: var(--color-accent); font-size: 0.85rem; text-decoration: none;">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                </div>
+
+                <button type="submit" class="btn-login">
+                    Iniciar Sesión
+                </button>
+            </form>
+
+            @* Footer del login *@
+            <div class="login-footer">
+                © 2026 SEG INV - Todos los derechos reservados
+            </div>
+        </div>
+    </div>
+
+    @* Script para animaciones opcionales *@
+    <script>
+        // Pequeña animación para el placeholder
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('.form-control-dark');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.querySelector('.icon').style.color = 'var(--color-accent)';
+                });
+                input.addEventListener('blur', function() {
+                    this.parentElement.querySelector('.icon').style.color = 'var(--color-muted)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,645 @@
+@model SEG_INV.Models.InventarioViewModel
+@{
+    ViewData["Title"] = "Seguimiento de Inventario";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    :root {
+        --color-bg:       #0f1117;
+        --color-surface:  #1a1d27;
+        --color-surface2: #21253a;
+        --color-border:   #2e3350;
+        --color-accent:   #4f8ef7;
+        --color-success:  #22c55e;
+        --color-danger:   #ef4444;
+        --color-warning:  #f59e0b;
+        --color-novedad:  #a855f7;
+        --color-text:     #e2e8f0;
+        --color-muted:    #7b87a0;
+        --radius:         12px;
+        --shadow:         0 4px 24px rgba(0,0,0,.4);
+    }
+
+    body { background: var(--color-bg); color: var(--color-text); font-family: 'Segoe UI', system-ui, sans-serif; }
+    .page-wrapper { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+
+    /* ── TOPBAR ── */
+    .topbar {
+        display: flex; align-items: center; justify-content: space-between;
+        background: var(--color-surface); border: 1px solid var(--color-border);
+        border-radius: var(--radius); padding: 1rem 1.5rem; margin-bottom: 1.5rem;
+        flex-wrap: wrap; gap: .75rem;
+    }
+    .topbar-title { font-size: 1.4rem; font-weight: 700; letter-spacing: -.5px; }
+    .topbar-title span { color: var(--color-accent); }
+    .topbar-user { font-size: .85rem; color: var(--color-muted); }
+
+    /* ── BOTÓN EXPORTAR ── */
+    .btn-export {
+        display: inline-flex; align-items: center; gap: .4rem;
+        padding: .45rem 1rem; border-radius: 8px; font-size: .85rem; font-weight: 600;
+        text-decoration: none; cursor: pointer; transition: all .2s;
+        background: rgba(34,197,94,.15); color: #86efac;
+        border: 1px solid rgba(34,197,94,.4);
+    }
+    .btn-export:hover {
+        background: rgba(34,197,94,.3); color: #bbf7d0;
+        border-color: rgba(34,197,94,.7); transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(34,197,94,.2);
+    }
+    .btn-exit {
+        padding: .45rem 1rem; border-radius: 8px; font-size: .85rem; font-weight: 700;
+        text-decoration: none;
+        background: rgba(168,85,247,.2); color: #d8b4fe;
+        border: 1px solid rgba(168,85,247,.4);
+        transition: all .2s;
+    }
+    .btn-exit:hover {
+        background: rgba(168,85,247,.35); color: #ede9fe;
+    }
+
+    /* ── ALERTAS ── */
+    .alert-custom { padding: .75rem 1.25rem; border-radius: 8px; margin-bottom: 1rem; font-size: .9rem; font-weight: 500; }
+    .alert-success { background: rgba(34,197,94,.15); border: 1px solid rgba(34,197,94,.4); color: #86efac; }
+    .alert-danger  { background: rgba(239,68,68,.15);  border: 1px solid rgba(239,68,68,.4);  color: #fca5a5; }
+
+    /* ── KPI CARDS ── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+    .kpi-card {
+        background: var(--color-surface); border: 1px solid var(--color-border);
+        border-radius: var(--radius); padding: 1.2rem 1.5rem;
+        display: flex; align-items: center; gap: 1rem;
+    }
+    .kpi-icon { font-size: 2rem; line-height: 1; }
+    .kpi-value { font-size: 2rem; font-weight: 800; line-height: 1; }
+    .kpi-label { font-size: .78rem; color: var(--color-muted); margin-top: .15rem; text-transform: uppercase; letter-spacing: .5px; }
+    .kpi-pendiente .kpi-value { color: var(--color-warning); }
+    .kpi-recibido  .kpi-value { color: var(--color-success); }
+    .kpi-novedad   .kpi-value { color: var(--color-novedad); }
+    .kpi-productos .kpi-value { color: var(--color-accent);  }
+
+    /* ── TABS ── */
+    .tabs { display: flex; gap: .5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .tab-btn {
+        padding: .55rem 1.25rem; border-radius: 8px; border: 1px solid var(--color-border);
+        background: var(--color-surface); color: var(--color-muted); font-size: .88rem;
+        cursor: pointer; transition: all .2s; font-weight: 500;
+    }
+    .tab-btn:hover, .tab-btn.active { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── CARDS ── */
+    .card-dark {
+        background: var(--color-surface); border: 1px solid var(--color-border);
+        border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem;
+        box-shadow: var(--shadow);
+    }
+    .card-dark h5 {
+        font-size: 1rem; font-weight: 700; margin-bottom: 1.2rem;
+        color: var(--color-accent); text-transform: uppercase; letter-spacing: .5px;
+    }
+
+    /* ── TABLAS ── */
+    .table-wrapper { overflow-x: auto; }
+    .table-dark-custom { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    .table-dark-custom th {
+        padding: .75rem 1rem; text-align: left; font-size: .75rem;
+        font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+        color: var(--color-muted); border-bottom: 1px solid var(--color-border);
+    }
+    .table-dark-custom td {
+        padding: .75rem 1rem; border-bottom: 1px solid rgba(46,51,80,.5);
+        vertical-align: middle;
+    }
+    .table-dark-custom tr:hover td { background: rgba(79,142,247,.05); }
+    .expandable-row { cursor: pointer; }
+    .expandable-row:hover td { background: rgba(79,142,247,.08) !important; }
+    .detalle-container { display: none; }
+    .detalle-container.open { display: table-row; }
+    .detalle-inner {
+        background: var(--color-bg); border-radius: 8px; padding: 1rem;
+        margin: .25rem 0;
+    }
+
+    /* ── BADGES ── */
+    .badge {
+        padding: .25rem .65rem; border-radius: 99px; font-size: .72rem;
+        font-weight: 700; display: inline-block;
+    }
+    .badge-pendiente { background: rgba(245,158,11,.2); color: #fcd34d; }
+    .badge-recibido  { background: rgba(34,197,94,.2);  color: #86efac; }
+    .badge-novedad   { background: rgba(168,85,247,.2); color: #d8b4fe; }
+
+    /* ── CHIPS ── */
+    .chip {
+        display: inline-block; padding: .2rem .6rem; border-radius: 99px;
+        font-size: .78rem; margin: 2px; background: var(--color-surface2);
+        border: 1px solid var(--color-border); color: var(--color-text);
+    }
+    .chip-pendiente { border-color: rgba(245,158,11,.4); color: #fcd34d; }
+    .chip-recibido  { border-color: rgba(34,197,94,.4);  color: #86efac; }
+
+    /* ── BARRA DE PROGRESO PRODUCTO ── */
+    .prod-bar-track {
+        height: 6px; border-radius: 99px; background: var(--color-surface2); margin-top: 4px;
+    }
+    .prod-bar-fill {
+        height: 6px; border-radius: 99px; background: var(--color-success); transition: width .5s;
+    }
+
+    /* ── SEARCH ── */
+    .search-box {
+        width: 100%; padding: .55rem 1rem; border-radius: 8px;
+        background: var(--color-surface2); border: 1px solid var(--color-border);
+        color: var(--color-text); font-size: .9rem; margin-bottom: 1rem;
+    }
+    .search-box:focus { outline: none; border-color: var(--color-accent); }
+    .search-box::placeholder { color: var(--color-muted); }
+
+    /* ── NOVEDAD ROW ── */
+    .row-novedad td { border-left: 3px solid var(--color-novedad); }
+    .row-vencido td { border-left: 3px solid var(--color-danger); }
+    .row-hoy     td { border-left: 3px solid var(--color-warning); }
+
+    /* ── EMPTY ── */
+    .empty-state { text-align: center; padding: 3rem; color: var(--color-muted); }
+    .empty-state .icon { font-size: 3rem; margin-bottom: .5rem; }
+
+    /* ── RESPONSIVE ── */
+    @@media (max-width: 900px) {
+        .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @@media (max-width: 600px) {
+        .kpi-grid { grid-template-columns: 1fr 1fr; }
+    }
+</style>
+
+<div class="page-wrapper">
+
+    @* ── TOPBAR ── *@
+    <div class="topbar">
+        <div class="topbar-title">📊 Seguimiento de <span>Inventario</span></div>
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div class="topbar-user">👤 @ViewBag.NombreUsuario &nbsp;|&nbsp; Inventario</div>
+            <a href="@Url.Action("ExportarExcel", "Inventario")" class="btn-export">
+                📥 Exportar Excel
+            </a>
+            <a href="@Url.Action("Logout", "Account")" class="btn-exit">Salir</a>
+        </div>
+    </div>
+
+    @* ── ALERTAS ── *@
+    @if (TempData["Exito"] != null)
+    {
+        <div class="alert-custom alert-success">✅ @TempData["Exito"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert-custom alert-danger">❌ @TempData["Error"]</div>
+    }
+
+    @* ── KPI CARDS ── *@
+    <div class="kpi-grid">
+        <div class="kpi-card kpi-pendiente">
+            <div class="kpi-icon">⏳</div>
+            <div>
+                <div class="kpi-value">@Model.TotalPendientes</div>
+                <div class="kpi-label">Pedidos Pendientes</div>
+            </div>
+        </div>
+        <div class="kpi-card kpi-recibido">
+            <div class="kpi-icon">✅</div>
+            <div>
+                <div class="kpi-value">@Model.TotalRecibidos</div>
+                <div class="kpi-label">Pedidos Recibidos</div>
+            </div>
+        </div>
+        <div class="kpi-card kpi-novedad">
+            <div class="kpi-icon">⚠️</div>
+            <div>
+                <div class="kpi-value">@Model.TotalNovedad</div>
+                <div class="kpi-label">Con Novedad</div>
+            </div>
+        </div>
+        <div class="kpi-card kpi-productos">
+            <div class="kpi-icon">📦</div>
+            <div>
+                <div class="kpi-value">@Model.TotalProductos</div>
+                <div class="kpi-label">Productos</div>
+            </div>
+        </div>
+    </div>
+
+    @* ── TABS ── *@
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('tab-productos', this)">📦 Por Producto</button>
+        <button class="tab-btn" onclick="showTab('tab-pendientes', this)">
+            ⏳ Pendientes
+            @if (Model.TotalPendientes > 0)
+            {
+                <span style="background:var(--color-warning);color:#000;border-radius:99px;padding:1px 7px;font-size:.72rem;margin-left:4px;">@Model.TotalPendientes</span>
+            }
+        </button>
+        <button class="tab-btn" onclick="showTab('tab-recibidos', this)">✅ Recibidos</button>
+        <button class="tab-btn" onclick="showTab('tab-novedades', this)">
+            ⚠️ Novedades
+            @if (Model.TotalNovedad > 0)
+            {
+                <span style="background:var(--color-novedad);color:#fff;border-radius:99px;padding:1px 7px;font-size:.72rem;margin-left:4px;">@Model.TotalNovedad</span>
+            }
+        </button>
+    </div>
+
+    @* ════════════════════════════════════════════════════════════ *@
+    @* TAB 1 — POR PRODUCTO                                        *@
+    @* ════════════════════════════════════════════════════════════ *@
+    <div id="tab-productos" class="tab-panel active">
+        <div class="card-dark">
+            <h5>📦 Estado por Producto</h5>
+            <input class="search-box" type="text" placeholder="🔍 Buscar producto..." onkeyup="filtrarTabla(this,'tbl-productos')" />
+            <div class="table-wrapper">
+                <table class="table-dark-custom" id="tbl-productos">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Stock Actual</th>
+                            <th>Recibidas</th>
+                            <th>Pendientes</th>
+                            <th>Progreso Pedidos</th>
+                            <th style="text-align:center">Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var prod in Model.Productos)
+                        {
+                            int total = prod.UnidadesRecibidas + prod.UnidadesPendientes;
+                            int pct   = total > 0 ? (int)((double)prod.UnidadesRecibidas / total * 100) : 0;
+                            <tr class="expandable-row" onclick="toggleDetalleProd(@prod.ProductoId)">
+                                <td>
+                                    <div style="font-weight:600;">@prod.NombreProducto</div>
+                                </td>
+                                <td>
+                                    <span style="font-size:1.1rem;font-weight:700;color:var(--color-accent)">@prod.InventarioActual</span>
+                                    <span style="color:var(--color-muted);font-size:.8rem"> uds</span>
+                                </td>
+                                <td>
+                                    <span style="color:var(--color-success);font-weight:600">@prod.UnidadesRecibidas</span>
+                                </td>
+                                <td>
+                                    @if (prod.UnidadesPendientes > 0)
+                                    {
+                                        <span style="color:var(--color-warning);font-weight:600">@prod.UnidadesPendientes</span>
+                                    }
+                                    else
+                                    {
+                                        <span style="color:var(--color-muted)">0</span>
+                                    }
+                                </td>
+                                <td style="min-width:120px;">
+                                    @if (total > 0)
+                                    {
+                                        <div style="font-size:.78rem;color:var(--color-muted)">@pct% recibido</div>
+                                        <div class="prod-bar-track">
+                                            <div class="prod-bar-fill" style="width:@pct%"></div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span style="color:var(--color-muted);font-size:.8rem">Sin pedidos</span>
+                                    }
+                                </td>
+                                <td style="text-align:center">
+                                    <span style="color:var(--color-muted);font-size:.8rem">▼ ver @prod.PedidosActivos.Count pedido(s)</span>
+                                </td>
+                            </tr>
+
+                            @* Fila expandible con pedidos del producto *@
+                            <tr class="detalle-container" id="det-prod-@prod.ProductoId">
+                                <td colspan="6" style="padding:0 1rem 1rem 2rem;">
+                                    <div class="detalle-inner">
+                                        @if (!prod.PedidosActivos.Any())
+                                        {
+                                            <p style="color:var(--color-muted);margin:0;">Sin pedidos registrados.</p>
+                                        }
+                                        else
+                                        {
+                                            <table style="width:100%;font-size:.83rem;border-collapse:collapse;">
+                                                <thead>
+                                                    <tr style="color:var(--color-muted);">
+                                                        <th style="padding:.4rem .6rem;text-align:left;">Pedido</th>
+                                                        <th style="padding:.4rem .6rem;text-align:left;">Proveedor</th>
+                                                        <th style="padding:.4rem .6rem;text-align:left;">Cant.</th>
+                                                        <th style="padding:.4rem .6rem;text-align:left;">Estado</th>
+                                                        <th style="padding:.4rem .6rem;text-align:left;">Entrega estimada</th>
+                                                        <th style="padding:.4rem .6rem;text-align:left;">Recibido</th>
+                                                        <th style="padding:.4rem .6rem;text-align:left;">Factura</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var p in prod.PedidosActivos)
+                                                    {
+                                                        <tr style="border-top:1px solid var(--color-border);">
+                                                            <td style="padding:.4rem .6rem;">#@p.CompraId</td>
+                                                            <td style="padding:.4rem .6rem;">@p.NombreProveedor</td>
+                                                            <td style="padding:.4rem .6rem;font-weight:600;">@p.Cantidad</td>
+                                                            <td style="padding:.4rem .6rem;">
+                                                                <span class="badge badge-@p.Estado.ToLower()">@p.Estado</span>
+                                                            </td>
+                                                            <td style="padding:.4rem .6rem;color:var(--color-muted);">
+                                                                @(p.FechaEntregaProbable.HasValue ? p.FechaEntregaProbable.Value.ToString("dd/MM/yyyy") : "—")
+                                                            </td>
+                                                            <td style="padding:.4rem .6rem;">
+                                                                @if (p.FechaRecibido.HasValue)
+                                                                {
+                                                                    <span style="color:var(--color-success)">@p.FechaRecibido.Value.ToString("dd/MM/yyyy")</span>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span style="color:var(--color-muted)">—</span>
+                                                                }
+                                                            </td>
+                                                            <td style="padding:.4rem .6rem;color:var(--color-muted);">@(p.Factura ?? "—")</td>
+                                                        </tr>
+                                                        @if (!string.IsNullOrWhiteSpace(p.Novedades) && p.Novedades != "Sin novedades")
+                                                        {
+                                                            <tr>
+                                                                <td colspan="7" style="padding:.2rem .6rem .5rem 1.5rem;color:#d8b4fe;font-size:.78rem;">
+                                                                    ⚠️ @p.Novedades
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @* ════════════════════════════════════════════════════════════ *@
+    @* TAB 2 — PEDIDOS PENDIENTES                                  *@
+    @* ════════════════════════════════════════════════════════════ *@
+    <div id="tab-pendientes" class="tab-panel">
+        <div class="card-dark">
+            <h5>⏳ Pedidos Pendientes por Llegar</h5>
+            @if (!Model.PedidosPendientes.Any())
+            {
+                <div class="empty-state">
+                    <div class="icon">🎉</div>
+                    <p>No hay pedidos pendientes.</p>
+                </div>
+            }
+            else
+            {
+                <input class="search-box" type="text" placeholder="🔍 Buscar proveedor o pedido..." onkeyup="filtrarTabla(this,'tbl-pendientes')" />
+                <div class="table-wrapper">
+                    <table class="table-dark-custom" id="tbl-pendientes">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Proveedor</th>
+                                <th>Fecha Entrega Estimada</th>
+                                <th>Urgencia</th>
+                                <th>Productos</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var pedido in Model.PedidosPendientes)
+                            {
+                                bool esVencido = pedido.FechaEntregaProbable.HasValue && pedido.FechaEntregaProbable.Value.Date < DateTime.Today;
+                                bool esHoy     = pedido.FechaEntregaProbable.HasValue && pedido.FechaEntregaProbable.Value.Date == DateTime.Today;
+                                string rowClass = esVencido ? "row-vencido" : (esHoy ? "row-hoy" : "");
+
+                                <tr class="@rowClass">
+                                    <td style="font-weight:700;color:var(--color-accent)">#@pedido.Id</td>
+                                    <td>@pedido.NombreProveedor</td>
+                                    <td style="color:var(--color-muted)">
+                                        @(pedido.FechaEntregaProbable.HasValue ? pedido.FechaEntregaProbable.Value.ToString("dd/MM/yyyy") : "Sin fecha")
+                                    </td>
+                                    <td>
+                                        @if (esVencido)
+                                        {
+                                            <span class="badge" style="background:rgba(239,68,68,.2);color:#fca5a5;">🔴 Vencido</span>
+                                        }
+                                        else if (esHoy)
+                                        {
+                                            <span class="badge" style="background:rgba(245,158,11,.2);color:#fcd34d;">🟡 Hoy</span>
+                                        }
+                                        else if (pedido.FechaEntregaProbable.HasValue)
+                                        {
+                                            int dias = (pedido.FechaEntregaProbable.Value.Date - DateTime.Today).Days;
+                                            <span class="badge" style="background:rgba(79,142,247,.15);color:#93c5fd;">en @dias día(s)</span>
+                                        }
+                                        else
+                                        {
+                                            <span style="color:var(--color-muted);font-size:.8rem">—</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @foreach (var det in pedido.Detalles)
+                                        {
+                                            <span class="chip chip-pendiente">@det.NombreProducto × @det.Cantidad</span>
+                                        }
+                                    </td>
+                                    <td><span class="badge badge-pendiente">PENDIENTE</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    @* ════════════════════════════════════════════════════════════ *@
+    @* TAB 3 — PEDIDOS RECIBIDOS                                   *@
+    @* ════════════════════════════════════════════════════════════ *@
+    <div id="tab-recibidos" class="tab-panel">
+        <div class="card-dark">
+            <h5>✅ Pedidos Recibidos</h5>
+            @if (!Model.PedidosRecibidos.Any())
+            {
+                <div class="empty-state">
+                    <div class="icon">📭</div>
+                    <p>No hay recepciones registradas aún.</p>
+                </div>
+            }
+            else
+            {
+                <input class="search-box" type="text" placeholder="🔍 Buscar proveedor, factura..." onkeyup="filtrarTabla(this,'tbl-recibidos')" />
+                <div class="table-wrapper">
+                    <table class="table-dark-custom" id="tbl-recibidos">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Proveedor</th>
+                                <th>Fecha Recibido</th>
+                                <th>Factura</th>
+                                <th>Bultos</th>
+                                <th>Recibió</th>
+                                <th>Productos</th>
+                                <th>Obs.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var rec in Model.PedidosRecibidos)
+                            {
+                                <tr class="expandable-row" onclick="toggleDetalleRec('rec-@rec.Id')">
+                                    <td style="font-weight:700;color:var(--color-accent)">#@rec.CompraId</td>
+                                    <td>@rec.NombreProveedor</td>
+                                    <td style="color:var(--color-muted)">
+                                        @(rec.FechaRecibido.HasValue ? rec.FechaRecibido.Value.ToString("dd/MM/yyyy") : "—")
+                                        @if (rec.Hora.HasValue)
+                                        {
+                                            <span style="color:var(--color-muted);font-size:.78rem"> @rec.Hora.Value.ToString(@"hh\:mm")</span>
+                                        }
+                                    </td>
+                                    <td>@(rec.Factura ?? "—")</td>
+                                    <td style="text-align:center">@(rec.CantidadBultos?.ToString() ?? "—")</td>
+                                    <td>@(rec.QuienRecibe ?? "—")</td>
+                                    <td>
+                                        @foreach (var p in rec.Productos)
+                                        {
+                                            <span class="chip chip-recibido">@p.NombreProducto × @p.Cantidad</span>
+                                        }
+                                    </td>
+                                    <td style="color:var(--color-muted);font-size:.8rem;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                        @(rec.Novedades == "Sin novedades" || rec.Novedades == null ? "—" : rec.Novedades)
+                                    </td>
+                                </tr>
+                                @* Fila detalle expandible *@
+                                <tr class="detalle-container" id="rec-@rec.Id">
+                                    <td colspan="8" style="padding:0 1rem .75rem 2rem;">
+                                        <div class="detalle-inner" style="font-size:.83rem;">
+                                            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;">
+                                                <div>
+                                                    <span style="color:var(--color-muted)">Contenido declarado</span><br/>
+                                                    <span>@(rec.Contenido ?? "—")</span>
+                                                </div>
+                                                <div>
+                                                    <span style="color:var(--color-muted)">Registrado el</span><br/>
+                                                    <span>@(rec.FechaRegistro.HasValue ? rec.FechaRegistro.Value.ToString("dd/MM/yyyy HH:mm") : "—")</span>
+                                                </div>
+                                                <div>
+                                                    <span style="color:var(--color-muted)">Observaciones</span><br/>
+                                                    <span>@(rec.Novedades ?? "—")</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    @* ════════════════════════════════════════════════════════════ *@
+    @* TAB 4 — NOVEDADES                                           *@
+    @* ════════════════════════════════════════════════════════════ *@
+    <div id="tab-novedades" class="tab-panel">
+        <div class="card-dark">
+            <h5>⚠️ Pedidos con Novedad</h5>
+            @if (!Model.PedidosNovedad.Any())
+            {
+                <div class="empty-state">
+                    <div class="icon">👍</div>
+                    <p>No hay pedidos con novedades.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-wrapper">
+                    <table class="table-dark-custom">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Proveedor</th>
+                                <th>Fecha</th>
+                                <th>Factura</th>
+                                <th>Productos</th>
+                                <th>Novedad</th>
+                                <th>Reportó</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var rec in Model.PedidosNovedad)
+                            {
+                                <tr class="row-novedad">
+                                    <td style="font-weight:700;color:var(--color-novedad)">#@rec.CompraId</td>
+                                    <td>@rec.NombreProveedor</td>
+                                    <td style="color:var(--color-muted)">
+                                        @(rec.FechaRecibido.HasValue ? rec.FechaRecibido.Value.ToString("dd/MM/yyyy") : "—")
+                                    </td>
+                                    <td>@(rec.Factura ?? "—")</td>
+                                    <td>
+                                        @foreach (var p in rec.Productos)
+                                        {
+                                            <span class="chip" style="border-color:rgba(168,85,247,.4);color:#d8b4fe;">
+                                                @p.NombreProducto × @p.Cantidad
+                                            </span>
+                                        }
+                                    </td>
+                                    <td style="color:#d8b4fe;max-width:220px;">
+                                        @if (rec.Novedades != null)
+                                        {
+                                            @rec.Novedades.Replace("[PEDIDO NO RECIBIDO / INCOMPLETO] ", "")
+                                        }
+                                    </td>
+                                    <td style="color:var(--color-muted)">@(rec.QuienRecibe ?? "—")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+</div><!-- /page-wrapper -->
+
+@section Scripts {
+    <script>
+        // ── TABS ──
+        function showTab(id, btn) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if (btn) btn.classList.add('active');
+        }
+
+        // ── EXPANDIR FILA DE PRODUCTO ──
+        function toggleDetalleProd(id) {
+            const el = document.getElementById('det-prod-' + id);
+            if (!el) return;
+            el.classList.toggle('open');
+        }
+
+        // ── EXPANDIR FILA DE RECEPCIÓN ──
+        function toggleDetalleRec(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.toggle('open');
+        }
+
+        // ── FILTRO DE BÚSQUEDA ──
+        function filtrarTabla(input, tablaId) {
+            const filtro = input.value.toLowerCase();
+            const filas  = document.getElementById(tablaId).querySelectorAll('tbody tr');
+            filas.forEach(fila => {
+                fila.style.display = fila.textContent.toLowerCase().includes(filtro) ? '' : 'none';
+            });
+        }
+    </script>
+}

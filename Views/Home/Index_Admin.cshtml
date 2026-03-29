@@ -1,0 +1,724 @@
+@model SEG_INV.Models.AdminViewModel
+@{
+    ViewData["Title"] = "Panel de Administración";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    :root {
+        --color-bg:       #0f1117;
+        --color-surface:  #1a1d27;
+        --color-surface2: #21253a;
+        --color-border:   #2e3350;
+        --color-accent:   #4f8ef7;
+        --color-accent2:  #7c5cfc;
+        --color-success:  #22c55e;
+        --color-danger:   #ef4444;
+        --color-warning:  #f59e0b;
+        --color-novedad:  #a855f7;
+        --color-text:     #e2e8f0;
+        --color-muted:    #7b87a0;
+        --radius:         12px;
+        --shadow:         0 4px 24px rgba(0,0,0,.4);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+        background: var(--color-bg);
+        color: var(--color-text);
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        margin: 0;
+        padding: 0;
+        -webkit-text-size-adjust: 100%;
+    }
+
+    /* ── PAGE WRAPPER ── */
+    .page-wrapper {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        padding: .9rem 1.2rem;
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+        gap: .6rem;
+    }
+    .topbar-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        letter-spacing: -.5px;
+    }
+    .topbar-title span { color: var(--color-accent); }
+    .topbar-right {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        flex-wrap: wrap;
+    }
+    .topbar-user { font-size: .82rem; color: var(--color-muted); }
+
+    /* ── ALERTS ── */
+    .alert-custom { padding: .7rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .88rem; font-weight: 500; }
+    .alert-success { background: rgba(34,197,94,.15); border: 1px solid rgba(34,197,94,.4); color: #86efac; }
+    .alert-danger  { background: rgba(239,68,68,.15);  border: 1px solid rgba(239,68,68,.4);  color: #fca5a5; }
+
+    /* ── KPI GRID ── */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: .75rem;
+        margin-bottom: 1.25rem;
+    }
+    .kpi-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        padding: 1rem 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+    .kpi-icon  { font-size: 1.6rem; line-height: 1; flex-shrink: 0; }
+    .kpi-value { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+    .kpi-label { font-size: .68rem; color: var(--color-muted); margin-top: .15rem; text-transform: uppercase; letter-spacing: .5px; }
+    .kpi-blue   .kpi-value { color: var(--color-accent); }
+    .kpi-green  .kpi-value { color: var(--color-success); }
+    .kpi-red    .kpi-value { color: var(--color-danger); }
+    .kpi-yellow .kpi-value { color: var(--color-warning); }
+    .kpi-purple .kpi-value { color: var(--color-novedad); }
+    .kpi-muted  .kpi-value { color: var(--color-muted); }
+
+    /* ── TABS ── */
+    .tabs {
+        display: flex;
+        gap: .4rem;
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+    }
+    .tab-btn {
+        padding: .5rem 1rem;
+        border-radius: 8px;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface);
+        color: var(--color-muted);
+        font-size: .85rem;
+        cursor: pointer;
+        transition: all .2s;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+    .tab-btn:hover, .tab-btn.active {
+        background: var(--color-accent);
+        border-color: var(--color-accent);
+        color: #fff;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── CARD ── */
+    .card-dark {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow);
+    }
+    .card-dark h5 {
+        font-size: .92rem;
+        font-weight: 700;
+        margin: 0 0 1.1rem;
+        color: var(--color-accent);
+        text-transform: uppercase;
+        letter-spacing: .5px;
+    }
+
+    /* ── FORM ── */
+    .form-grid   { display: grid; gap: .7rem; }
+    .form-grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .form-grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .form-label  {
+        font-size: .75rem;
+        font-weight: 600;
+        color: var(--color-muted);
+        margin-bottom: .3rem;
+        display: block;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+    }
+    .form-control-dark {
+        width: 100%;
+        padding: .6rem .9rem;
+        border-radius: 8px;
+        background: var(--color-surface2);
+        border: 1px solid var(--color-border);
+        color: var(--color-text);
+        font-size: .9rem;
+        transition: border-color .2s;
+    }
+    .form-control-dark:focus { outline: none; border-color: var(--color-accent); }
+    .form-control-dark option { background: var(--color-surface2); }
+
+    /* ── BUTTONS ── */
+    .btn-primary-custom {
+        padding: .55rem 1.2rem;
+        border-radius: 8px;
+        border: none;
+        background: var(--color-accent);
+        color: #fff;
+        font-weight: 600;
+        font-size: .88rem;
+        cursor: pointer;
+        transition: opacity .2s;
+        white-space: nowrap;
+    }
+    .btn-primary-custom:hover { opacity: .85; }
+    .btn-danger-custom {
+        padding: .4rem .8rem;
+        border-radius: 6px;
+        border: none;
+        background: rgba(239,68,68,.15);
+        color: #fca5a5;
+        font-size: .8rem;
+        cursor: pointer;
+        transition: background .2s;
+        white-space: nowrap;
+    }
+    .btn-danger-custom:hover  { background: rgba(239,68,68,.35); }
+    .btn-edit-custom {
+        padding: .4rem .8rem;
+        border-radius: 6px;
+        border: none;
+        background: rgba(79,142,247,.15);
+        color: #93c5fd;
+        font-size: .8rem;
+        cursor: pointer;
+        transition: background .2s;
+        white-space: nowrap;
+    }
+    .btn-edit-custom:hover    { background: rgba(79,142,247,.35); }
+    .btn-toggle-custom {
+        padding: .4rem .8rem;
+        border-radius: 6px;
+        border: none;
+        background: rgba(245,158,11,.15);
+        color: #fcd34d;
+        font-size: .8rem;
+        cursor: pointer;
+        transition: background .2s;
+        white-space: nowrap;
+    }
+    .btn-toggle-custom:hover  { background: rgba(245,158,11,.35); }
+
+    /* ── TABLE (desktop) ── */
+    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-dark-custom { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    .table-dark-custom th {
+        padding: .7rem 1rem;
+        text-align: left;
+        font-size: .72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        color: var(--color-muted);
+        border-bottom: 1px solid var(--color-border);
+        white-space: nowrap;
+    }
+    .table-dark-custom td {
+        padding: .7rem 1rem;
+        border-bottom: 1px solid rgba(46,51,80,.5);
+        vertical-align: middle;
+    }
+    .table-dark-custom tr:hover td { background: rgba(79,142,247,.05); }
+
+    /* ── MOBILE CARD LIST (oculta en desktop) ── */
+    .mobile-user-list { display: none; }
+    .mobile-user-card {
+        background: var(--color-surface2);
+        border: 1px solid var(--color-border);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: .75rem;
+    }
+    .mobile-user-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: .6rem;
+        flex-wrap: wrap;
+        gap: .4rem;
+    }
+    .mobile-user-name { font-weight: 700; font-size: .95rem; }
+    .mobile-user-meta { font-size: .8rem; color: var(--color-muted); margin-bottom: .6rem; display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+    .mobile-user-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; }
+    .mobile-user-actions form { display: inline; }
+
+    /* ── BADGES ── */
+    .badge { padding: .22rem .6rem; border-radius: 99px; font-size: .7rem; font-weight: 700; }
+    .badge-gerente    { background: rgba(79,142,247,.2);  color: #93c5fd; }
+    .badge-bodega     { background: rgba(245,158,11,.2);  color: #fcd34d; }
+    .badge-inventario { background: rgba(34,197,94,.2);   color: #86efac; }
+    .badge-admin      { background: rgba(168,85,247,.2);  color: #d8b4fe; }
+    .badge-activo     { background: rgba(34,197,94,.15);  color: #86efac; border: 1px solid rgba(34,197,94,.4); }
+    .badge-inactivo   { background: rgba(100,116,139,.15);color: #94a3b8; border: 1px solid rgba(100,116,139,.3); }
+
+    /* ── INLINE EDIT ── */
+    .inline-edit-form { display: none; background: var(--color-surface2); border-radius: 8px; padding: 1rem; margin-top: .5rem; }
+    .inline-edit-form.open { display: block; }
+
+    /* ── LOG ── */
+    .log-item { display: flex; align-items: flex-start; gap: .75rem; padding: .7rem 0; border-bottom: 1px solid var(--color-border); }
+    .log-item:last-child { border-bottom: none; }
+    .log-accion { padding: .2rem .5rem; border-radius: 5px; font-size: .68rem; font-weight: 700; text-transform: uppercase; min-width: 58px; text-align: center; flex-shrink: 0; }
+    .log-crear    { background: rgba(34,197,94,.2);  color: #86efac; }
+    .log-editar   { background: rgba(79,142,247,.2); color: #93c5fd; }
+    .log-eliminar { background: rgba(239,68,68,.2);  color: #fca5a5; }
+
+    /* ── HELPERS ── */
+    .d-flex { display: flex; }
+    .d-inline { display: inline; }
+    .align-items-center { align-items: center; }
+    .align-items-flex-end { align-items: flex-end; }
+    .gap-3 { gap: .75rem; }
+
+    /* ══════════════════════════════════════
+       RESPONSIVE BREAKPOINTS
+    ══════════════════════════════════════ */
+
+    /* Tablet: ≤ 900px */
+    @@media (max-width: 900px) {
+        .form-grid-3 { grid-template-columns: repeat(2, 1fr); }
+        .kpi-grid    { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    /* Mobile: ≤ 600px */
+    @@media (max-width: 600px) {
+        .page-wrapper { padding: .75rem .6rem; }
+
+        .topbar { padding: .75rem 1rem; }
+        .topbar-title { font-size: 1rem; }
+        .topbar-user  { font-size: .75rem; }
+
+        .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: .5rem; }
+        .kpi-card { padding: .75rem .9rem; gap: .6rem; }
+        .kpi-icon  { font-size: 1.3rem; }
+        .kpi-value { font-size: 1.35rem; }
+        .kpi-label { font-size: .62rem; }
+
+        .tabs { gap: .35rem; }
+        .tab-btn { font-size: .78rem; padding: .45rem .8rem; }
+
+        .card-dark { padding: 1rem .9rem; }
+
+        /* Ocultar tabla y mostrar tarjetas en móvil */
+        .table-wrapper         { display: none; }
+        .mobile-user-list      { display: block; }
+
+        .form-grid-2,
+        .form-grid-3 { grid-template-columns: 1fr; }
+
+        /* Botón guardar full-width en móvil */
+        .form-submit-row {
+            display: flex;
+            flex-direction: column;
+            gap: .5rem;
+        }
+        .form-submit-row .btn-primary-custom { width: 100%; text-align: center; }
+
+        .log-item { gap: .5rem; }
+        .log-accion { min-width: 50px; font-size: .65rem; }
+    }
+
+    /* Extra small: ≤ 380px */
+    @@media (max-width: 380px) {
+        .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+        .topbar-title { font-size: .92rem; }
+    }
+</style>
+
+<div class="page-wrapper">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <div class="topbar-title">⚙️ Panel de <span>Administración</span></div>
+        <div class="topbar-right">
+            <div class="topbar-user">👤 @ViewBag.NombreUsuario &nbsp;|&nbsp; Administrador</div>
+            <a href="@Url.Action("Logout","Account")" class="btn-danger-custom">Salir</a>
+        </div>
+    </div>
+
+    @if (TempData["Exito"] != null)
+    {
+        <div class="alert-custom alert-success">✅ @TempData["Exito"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert-custom alert-danger">❌ @TempData["Error"]</div>
+    }
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+        <div class="kpi-card kpi-blue">   <div class="kpi-icon">👥</div><div><div class="kpi-value">@Model.Estadisticas.TotalUsuarios</div>    <div class="kpi-label">Usuarios</div></div></div>
+        <div class="kpi-card kpi-green">  <div class="kpi-icon">✅</div><div><div class="kpi-value">@Model.Estadisticas.UsuariosActivos</div>   <div class="kpi-label">Activos</div></div></div>
+        <div class="kpi-card kpi-muted">  <div class="kpi-icon">🔒</div><div><div class="kpi-value">@Model.Estadisticas.UsuariosInactivos</div> <div class="kpi-label">Inactivos</div></div></div>
+        <div class="kpi-card kpi-blue">   <div class="kpi-icon">🛒</div><div><div class="kpi-value">@Model.Estadisticas.TotalCompras</div>      <div class="kpi-label">Compras</div></div></div>
+        <div class="kpi-card kpi-yellow"> <div class="kpi-icon">⏳</div><div><div class="kpi-value">@Model.Estadisticas.ComprasPendientes</div> <div class="kpi-label">Pendientes</div></div></div>
+        <div class="kpi-card kpi-green">  <div class="kpi-icon">📦</div><div><div class="kpi-value">@Model.Estadisticas.ComprasRecibidas</div>  <div class="kpi-label">Recibidas</div></div></div>
+        <div class="kpi-card kpi-purple"> <div class="kpi-icon">⚠️</div><div><div class="kpi-value">@Model.Estadisticas.ComprasNovedad</div>    <div class="kpi-label">Novedad</div></div></div>
+        <div class="kpi-card kpi-blue">   <div class="kpi-icon">🧾</div><div><div class="kpi-value">@Model.Estadisticas.TotalProductos</div>    <div class="kpi-label">Productos</div></div></div>
+        <div class="kpi-card kpi-red">    <div class="kpi-icon">🔴</div><div><div class="kpi-value">@Model.Estadisticas.ProductosSinStock</div> <div class="kpi-label">Sin Stock</div></div></div>
+        <div class="kpi-card kpi-yellow"> <div class="kpi-icon">🔶</div><div><div class="kpi-value">@Model.Estadisticas.ProductosCriticos</div> <div class="kpi-label">Críticos</div></div></div>
+        <div class="kpi-card kpi-blue">   <div class="kpi-icon">🏢</div><div><div class="kpi-value">@Model.Estadisticas.TotalProveedores</div>  <div class="kpi-label">Proveedores</div></div></div>
+        <div class="kpi-card kpi-green">  <div class="kpi-icon">📥</div><div><div class="kpi-value">@Model.Estadisticas.TotalRecepciones</div>  <div class="kpi-label">Recepciones</div></div></div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('tab-usuarios', this)">👥 Usuarios</button>
+        <button class="tab-btn"        onclick="showTab('tab-nuevo-usuario', this)">➕ Nuevo</button>
+        @if (Model.Logs.Any())
+        {
+            <button class="tab-btn" onclick="showTab('tab-logs', this)">📋 Bitácora</button>
+        }
+    </div>
+
+    <!-- TAB: USUARIOS -->
+    <div id="tab-usuarios" class="tab-panel active">
+        <div class="card-dark">
+            <h5>👥 Usuarios del Sistema</h5>
+
+            <!-- TABLA (desktop / tablet) -->
+            <div class="table-wrapper">
+                <table class="table-dark-custom">
+                    <thead>
+                        <tr>
+                            <th>#</th><th>Nombre</th><th>Usuario</th><th>Rol</th>
+                            <th>Estado</th><th>Creado</th><th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var u in Model.Usuarios)
+                        {
+                            <tr>
+                                <td><strong>@u.Id</strong></td>
+                                <td>@u.Nombre</td>
+                                <td><code style="color:var(--color-accent);font-size:.85rem">@u.Usuario</code></td>
+                                <td>
+                                    <span class="badge @(u.Rol == "GERENTE" ? "badge-gerente" :
+                                                         u.Rol == "BODEGA"  ? "badge-bodega"  :
+                                                         u.Rol == "ADMIN"   ? "badge-admin"   :
+                                                                              "badge-inventario")">@u.Rol</span>
+                                </td>
+                                <td>
+                                    <span class="badge @(u.Activo ? "badge-activo" : "badge-inactivo")">
+                                        @(u.Activo ? "Activo" : "Inactivo")
+                                    </span>
+                                </td>
+                                <td style="color:var(--color-muted);font-size:.82rem">
+                                    @(u.FechaCreacion.HasValue ? u.FechaCreacion.Value.ToString("dd/MM/yyyy") : "—")
+                                </td>
+                                <td>
+                                    <button class="btn-edit-custom"
+                                            onclick="abrirEditarUsuario(@u.Id, '@Html.Raw(u.Nombre.Replace("'","\\'"))', '@Html.Raw(u.Usuario.Replace("'","\\'"))', '@u.Rol', '@(u.Activo ? "true" : "false")')">
+                                        ✏️ Editar
+                                    </button>
+                                    <form method="post" action="@Url.Action("ToggleActivoUsuario","Admin")" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@u.Id" />
+                                        <button type="submit" class="btn-toggle-custom">
+                                            @(u.Activo ? "🔒 Desactivar" : "🔓 Activar")
+                                        </button>
+                                    </form>
+                                    <form method="post" action="@Url.Action("EliminarUsuario","Admin")" class="d-inline"
+                                          onsubmit="return confirm('¿Eliminar usuario @u.Usuario?')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@u.Id" />
+                                        <button type="submit" class="btn-danger-custom">🗑️</button>
+                                    </form>
+                                </td>
+                            </tr>
+
+                            <!-- Fila inline edit (desktop) -->
+                            <tr id="edit-row-@u.Id" style="display:none">
+                                <td colspan="7" style="padding:.5rem 1rem 1rem">
+                                    <div class="inline-edit-form open">
+                                        <form method="post" action="@Url.Action("EditarUsuario","Admin")">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="Id" value="@u.Id" />
+                                            <div class="form-grid form-grid-3" style="margin-bottom:.75rem">
+                                                <div>
+                                                    <label class="form-label">Nombre Completo</label>
+                                                    <input type="text" name="Nombre" id="edit-nombre-@u.Id"
+                                                           class="form-control-dark" required maxlength="100" />
+                                                </div>
+                                                <div>
+                                                    <label class="form-label">Usuario</label>
+                                                    <input type="text" name="Usuario" id="edit-usuario-@u.Id"
+                                                           class="form-control-dark" required maxlength="50" />
+                                                </div>
+                                                <div>
+                                                    <label class="form-label">Nueva Contraseña <span style="color:var(--color-muted)">(opcional)</span></label>
+                                                    <input type="password" name="Contrasena"
+                                                           class="form-control-dark" placeholder="Dejar vacío para no cambiar" />
+                                                </div>
+                                            </div>
+                                            <div class="form-grid form-grid-3">
+                                                <div>
+                                                    <label class="form-label">Rol</label>
+                                                    <select name="Rol" id="edit-rol-@u.Id" class="form-control-dark">
+                                                        <option value="GERENTE">GERENTE</option>
+                                                        <option value="BODEGA">BODEGA</option>
+                                                        <option value="INVENTARIO">INVENTARIO</option>
+                                                        <option value="ADMIN">ADMIN</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="form-label">Estado</label>
+                                                    <select name="Activo" id="edit-activo-@u.Id" class="form-control-dark">
+                                                        <option value="true">Activo</option>
+                                                        <option value="false">Inactivo</option>
+                                                    </select>
+                                                </div>
+                                                <div style="display:flex;align-items:flex-end;gap:.5rem">
+                                                    <button type="submit" class="btn-primary-custom">💾 Guardar</button>
+                                                    <button type="button" class="btn-danger-custom"
+                                                            onclick="cerrarEditarUsuario(@u.Id)">Cancelar</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- TARJETAS (móvil) -->
+            <div class="mobile-user-list">
+                @foreach (var u in Model.Usuarios)
+                {
+                    <div class="mobile-user-card">
+                        <div class="mobile-user-card-header">
+                            <div class="mobile-user-name">@u.Nombre</div>
+                            <span class="badge @(u.Activo ? "badge-activo" : "badge-inactivo")">
+                                @(u.Activo ? "Activo" : "Inactivo")
+                            </span>
+                        </div>
+                        <div class="mobile-user-meta">
+                            <code style="color:var(--color-accent)">@u.Usuario</code>
+                            <span class="badge @(u.Rol == "GERENTE" ? "badge-gerente" :
+                                                 u.Rol == "BODEGA"  ? "badge-bodega"  :
+                                                 u.Rol == "ADMIN"   ? "badge-admin"   :
+                                                                      "badge-inventario")">@u.Rol</span>
+                            <span>@(u.FechaCreacion.HasValue ? u.FechaCreacion.Value.ToString("dd/MM/yy") : "—")</span>
+                        </div>
+
+                        <div class="mobile-user-actions">
+                            <button class="btn-edit-custom"
+                                    onclick="abrirEditarMovil(@u.Id, '@Html.Raw(u.Nombre.Replace("'","\\'"))', '@Html.Raw(u.Usuario.Replace("'","\\'"))', '@u.Rol', '@(u.Activo ? "true" : "false")')">
+                                ✏️ Editar
+                            </button>
+                            <form method="post" action="@Url.Action("ToggleActivoUsuario","Admin")">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@u.Id" />
+                                <button type="submit" class="btn-toggle-custom">
+                                    @(u.Activo ? "🔒 Desactivar" : "🔓 Activar")
+                                </button>
+                            </form>
+                            <form method="post" action="@Url.Action("EliminarUsuario","Admin")"
+                                  onsubmit="return confirm('¿Eliminar usuario @u.Usuario?')">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@u.Id" />
+                                <button type="submit" class="btn-danger-custom">🗑️ Eliminar</button>
+                            </form>
+                        </div>
+
+                        <!-- Edit inline móvil -->
+                        <div id="edit-movil-@u.Id" class="inline-edit-form" style="margin-top:.75rem">
+                            <form method="post" action="@Url.Action("EditarUsuario","Admin")">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="Id" value="@u.Id" />
+                                <div class="form-grid" style="margin-bottom:.7rem">
+                                    <div>
+                                        <label class="form-label">Nombre Completo</label>
+                                        <input type="text" name="Nombre" id="editm-nombre-@u.Id"
+                                               class="form-control-dark" required maxlength="100" />
+                                    </div>
+                                    <div>
+                                        <label class="form-label">Usuario</label>
+                                        <input type="text" name="Usuario" id="editm-usuario-@u.Id"
+                                               class="form-control-dark" required maxlength="50" />
+                                    </div>
+                                    <div>
+                                        <label class="form-label">Nueva Contraseña <span style="color:var(--color-muted)">(opcional)</span></label>
+                                        <input type="password" name="Contrasena"
+                                               class="form-control-dark" placeholder="Dejar vacío para no cambiar" />
+                                    </div>
+                                    <div>
+                                        <label class="form-label">Rol</label>
+                                        <select name="Rol" id="editm-rol-@u.Id" class="form-control-dark">
+                                            <option value="GERENTE">GERENTE</option>
+                                            <option value="BODEGA">BODEGA</option>
+                                            <option value="INVENTARIO">INVENTARIO</option>
+                                            <option value="ADMIN">ADMIN</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="form-label">Estado</label>
+                                        <select name="Activo" id="editm-activo-@u.Id" class="form-control-dark">
+                                            <option value="true">Activo</option>
+                                            <option value="false">Inactivo</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                                    <button type="submit" class="btn-primary-custom">💾 Guardar</button>
+                                    <button type="button" class="btn-danger-custom"
+                                            onclick="cerrarEditarMovil(@u.Id)">Cancelar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+
+        </div>
+    </div>
+
+    <!-- TAB: NUEVO USUARIO -->
+    <div id="tab-nuevo-usuario" class="tab-panel">
+        <div class="card-dark">
+            <h5>➕ Crear Nuevo Usuario</h5>
+            <form method="post" action="@Url.Action("CrearUsuario","Admin")">
+                @Html.AntiForgeryToken()
+                <div class="form-grid form-grid-3" style="margin-bottom:.75rem">
+                    <div>
+                        <label class="form-label">Nombre Completo *</label>
+                        <input type="text" name="Nombre" class="form-control-dark"
+                               placeholder="Nombre y apellido" required maxlength="100" />
+                    </div>
+                    <div>
+                        <label class="form-label">Usuario *</label>
+                        <input type="text" name="Usuario" class="form-control-dark"
+                               placeholder="login_usuario" required maxlength="50" />
+                    </div>
+                    <div>
+                        <label class="form-label">Contraseña *</label>
+                        <input type="password" name="Contrasena" class="form-control-dark"
+                               placeholder="••••••••" required />
+                    </div>
+                </div>
+                <div class="form-grid form-grid-3">
+                    <div>
+                        <label class="form-label">Rol *</label>
+                        <select name="Rol" class="form-control-dark">
+                            <option value="GERENTE">GERENTE</option>
+                            <option value="BODEGA" selected>BODEGA</option>
+                            <option value="INVENTARIO">INVENTARIO</option>
+                            <option value="ADMIN">ADMIN</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Estado</label>
+                        <select name="Activo" class="form-control-dark">
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
+                        </select>
+                    </div>
+                    <div style="display:flex;align-items:flex-end">
+                        <button type="submit" class="btn-primary-custom" style="width:100%">
+                            ➕ Crear Usuario
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TAB: LOGS -->
+    @if (Model.Logs.Any())
+    {
+        <div id="tab-logs" class="tab-panel">
+            <div class="card-dark">
+                <h5>📋 Bitácora de Actividad</h5>
+                @foreach (var log in Model.Logs)
+                {
+                    <div class="log-item">
+                        <span class="log-accion log-@log.Accion.ToLower()">@log.Accion</span>
+                        <div style="flex:1;min-width:0">
+                            <div style="font-size:.88rem;color:var(--color-text);word-break:break-word">@log.Descripcion</div>
+                            <div style="font-size:.73rem;color:var(--color-muted);margin-top:.15rem;flex-wrap:wrap;display:flex;gap:.3rem">
+                                <span>@log.Entidad @(log.EntidadId.HasValue ? $"#{log.EntidadId}" : "")</span>
+                                <span>·</span>
+                                <span>@log.RealizadoPor</span>
+                                <span>·</span>
+                                <span>@log.FechaHora.ToString("dd/MM/yyyy HH:mm")</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+</div>
+
+<script>
+    // ── TABS ──
+    function showTab(id, btn) {
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id)?.classList.add('active');
+        btn.classList.add('active');
+    }
+
+    // ── EDITAR INLINE (desktop) ──
+    function abrirEditarUsuario(id, nombre, usuario, rol, activo) {
+        document.querySelectorAll('[id^="edit-row-"]').forEach(r => r.style.display = 'none');
+        document.getElementById(`edit-nombre-${id}`).value  = nombre;
+        document.getElementById(`edit-usuario-${id}`).value = usuario;
+        document.getElementById(`edit-rol-${id}`).value     = rol;
+        document.getElementById(`edit-activo-${id}`).value  = activo;
+        document.getElementById(`edit-row-${id}`).style.display = 'table-row';
+    }
+    function cerrarEditarUsuario(id) {
+        document.getElementById(`edit-row-${id}`).style.display = 'none';
+    }
+
+    // ── EDITAR INLINE (móvil) ──
+    function abrirEditarMovil(id, nombre, usuario, rol, activo) {
+        document.querySelectorAll('[id^="edit-movil-"]').forEach(r => r.classList.remove('open'));
+        document.getElementById(`editm-nombre-${id}`).value  = nombre;
+        document.getElementById(`editm-usuario-${id}`).value = usuario;
+        document.getElementById(`editm-rol-${id}`).value     = rol;
+        document.getElementById(`editm-activo-${id}`).value  = activo;
+        document.getElementById(`edit-movil-${id}`).classList.add('open');
+        // scroll suave al formulario
+        document.getElementById(`edit-movil-${id}`).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    function cerrarEditarMovil(id) {
+        document.getElementById(`edit-movil-${id}`).classList.remove('open');
+    }
+
+    // ── AUTO-OCULTAR ALERTAS ──
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            document.querySelectorAll('.alert-custom').forEach(a => {
+                a.style.transition = 'opacity .5s';
+                a.style.opacity = '0';
+                setTimeout(() => a.remove(), 500);
+            });
+        }, 4000);
+    });
+</script>

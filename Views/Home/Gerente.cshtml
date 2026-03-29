@@ -1,0 +1,690 @@
+@model SEG_INV.Models.ComprasViewModel
+@{
+    ViewData["Title"] = "Gestión de Compras";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@* ─── ESTILOS PERSONALIZADOS ─── *@
+<style>
+    :root {
+        --color-bg: #0f1117;
+        --color-surface: #1a1d27;
+        --color-surface2: #21253a;
+        --color-border: #2e3350;
+        --color-accent: #4f8ef7;
+        --color-accent2: #7c5cfc;
+        --color-success: #22c55e;
+        --color-danger: #ef4444;
+        --color-warning: #f59e0b;
+        --color-text: #e2e8f0;
+        --color-muted: #7b87a0;
+        --radius: 12px;
+        --shadow: 0 4px 24px rgba(0,0,0,.4);
+    }
+
+    body { background: var(--color-bg); color: var(--color-text); font-family: 'Segoe UI', system-ui, sans-serif; }
+    .page-wrapper { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+
+    /* ── TOP BAR ── */
+    .topbar {
+        display: flex; align-items: center; justify-content: space-between;
+        background: var(--color-surface); border: 1px solid var(--color-border);
+        border-radius: var(--radius); padding: 1rem 1.5rem; margin-bottom: 1.5rem;
+    }
+    .topbar-title { font-size: 1.4rem; font-weight: 700; letter-spacing: -.5px; }
+    .topbar-title span { color: var(--color-accent); }
+    .topbar-user { font-size: .85rem; color: var(--color-muted); }
+
+    /* ── ALERTAS ── */
+    .alert-custom {
+        padding: .75rem 1.25rem; border-radius: 8px; margin-bottom: 1rem;
+        font-size: .9rem; font-weight: 500;
+    }
+    .alert-success { background: rgba(34,197,94,.15); border: 1px solid rgba(34,197,94,.4); color: #86efac; }
+    .alert-danger  { background: rgba(239,68,68,.15);  border: 1px solid rgba(239,68,68,.4);  color: #fca5a5; }
+
+    /* ── TABS ── */
+    .tabs { display: flex; gap: .5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .tab-btn {
+        padding: .55rem 1.25rem; border-radius: 8px; border: 1px solid var(--color-border);
+        background: var(--color-surface); color: var(--color-muted); font-size: .88rem;
+        cursor: pointer; transition: all .2s; font-weight: 500;
+    }
+    .tab-btn:hover, .tab-btn.active {
+        background: var(--color-accent); border-color: var(--color-accent); color: #fff;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── CARDS ── */
+    .card-dark {
+        background: var(--color-surface); border: 1px solid var(--color-border);
+        border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem;
+        box-shadow: var(--shadow);
+    }
+    .card-dark h5 {
+        font-size: 1rem; font-weight: 700; margin-bottom: 1.2rem;
+        color: var(--color-accent); text-transform: uppercase; letter-spacing: .5px;
+    }
+
+    /* ── FORMULARIOS ── */
+    .form-grid { display: grid; gap: .75rem; }
+    .form-grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .form-grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .form-grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+    .form-label { font-size: .78rem; font-weight: 600; color: var(--color-muted); margin-bottom: .3rem; display: block; text-transform: uppercase; letter-spacing: .4px; }
+    .form-control-dark {
+        width: 100%; padding: .6rem .9rem; border-radius: 8px;
+        background: var(--color-surface2); border: 1px solid var(--color-border);
+        color: var(--color-text); font-size: .9rem; transition: border-color .2s;
+    }
+    .form-control-dark:focus { outline: none; border-color: var(--color-accent); }
+    .form-control-dark option { background: var(--color-surface2); }
+
+    /* ── BOTONES ── */
+    .btn-primary-custom {
+        padding: .6rem 1.2rem; border-radius: 8px; border: none;
+        background: var(--color-accent); color: #fff; font-weight: 600;
+        font-size: .88rem; cursor: pointer; transition: opacity .2s;
+    }
+    .btn-primary-custom:hover { opacity: .85; }
+    .btn-danger-custom {
+        padding: .4rem .8rem; border-radius: 6px; border: none;
+        background: rgba(239,68,68,.15); color: #fca5a5; font-size: .8rem;
+        cursor: pointer; transition: background .2s;
+    }
+    .btn-danger-custom:hover { background: rgba(239,68,68,.35); }
+    .btn-edit-custom {
+        padding: .4rem .8rem; border-radius: 6px; border: none;
+        background: rgba(79,142,247,.15); color: #93c5fd; font-size: .8rem;
+        cursor: pointer; transition: background .2s;
+    }
+    .btn-edit-custom:hover { background: rgba(79,142,247,.35); }
+    .btn-sm-success {
+        padding: .4rem .8rem; border-radius: 6px; border: none;
+        background: rgba(34,197,94,.15); color: #86efac; font-size: .8rem;
+        cursor: pointer; transition: background .2s;
+    }
+    .btn-sm-success:hover { background: rgba(34,197,94,.35); }
+
+    /* ── TABLAS ── */
+    .table-dark-custom { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    .table-dark-custom th {
+        padding: .75rem 1rem; text-align: left; font-size: .75rem;
+        font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+        color: var(--color-muted); border-bottom: 1px solid var(--color-border);
+    }
+    .table-dark-custom td {
+        padding: .75rem 1rem; border-bottom: 1px solid rgba(46,51,80,.5);
+        vertical-align: middle;
+    }
+    .table-dark-custom tr:hover td { background: rgba(79,142,247,.05); }
+
+    /* ── BADGES ── */
+    .badge-pendiente { padding: .25rem .6rem; border-radius: 99px; font-size: .75rem; font-weight: 600; background: rgba(245,158,11,.2); color: #fcd34d; }
+    .badge-recibido  { padding: .25rem .6rem; border-radius: 99px; font-size: .75rem; font-weight: 600; background: rgba(34,197,94,.2);  color: #86efac; }
+
+    /* ── DETALLE INLINE ── */
+    .detalle-section { background: var(--color-bg); border-radius: 8px; padding: 1rem; margin-top: .5rem; }
+    .detalle-row { display: flex; align-items: center; gap: .75rem; padding: .4rem 0; border-bottom: 1px solid var(--color-border); }
+    .detalle-row:last-child { border-bottom: none; }
+
+    /* ── COLLAPSIBLE DETALLE ── */
+    .compra-row { cursor: pointer; }
+    .compra-row:hover td { background: rgba(79,142,247,.08) !important; }
+    .detalle-container { display: none; }
+    .detalle-container.open { display: table-row; }
+
+    /* ── MODAL-LIKE INLINE EDIT ── */
+    .inline-edit-form { display: none; background: var(--color-surface2); border-radius: 8px; padding: 1rem; margin-top: .5rem; }
+    .inline-edit-form.open { display: block; }
+
+    /* ── PRODUCTS IN PURCHASE FORM ── */
+    #lineas-productos .linea { display: flex; gap: .5rem; align-items: center; margin-bottom: .5rem; }
+    #lineas-productos .linea select, #lineas-productos .linea input { flex: 1; }
+
+    /* ── SCROLL ── */
+    .table-wrapper { overflow-x: auto; }
+
+    /* ── RESPONSIVE ── */
+    @@media (max-width: 768px) {
+        .form-grid-2, .form-grid-3, .form-grid-4 { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="page-wrapper">
+
+    @* ── TOP BAR ── *@
+    <div class="topbar">
+        <div class="topbar-title">🛒 Gestión de <span>Compras</span></div>
+        <div class="d-flex align-items-center gap-3">
+            <div class="topbar-user">👤 @ViewBag.NombreUsuario &nbsp;|&nbsp; Gerente</div>
+            <a href="@Url.Action("Logout","Account")" class="btn-danger-custom">Salir</a>
+        </div>
+    </div>
+
+    @* ── ALERTAS ── *@
+    @if (TempData["Exito"] != null)
+    {
+        <div class="alert-custom alert-success">✅ @TempData["Exito"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert-custom alert-danger">❌ @TempData["Error"]</div>
+    }
+
+    @* ── TABS ── *@
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('tab-compras')">📦 Compras</button>
+        <button class="tab-btn" onclick="showTab('tab-nueva-compra')">➕ Nueva Compra</button>
+        <button class="tab-btn" onclick="showTab('tab-proveedores')">🏢 Proveedores/Empresas</button>
+        <button class="tab-btn" onclick="showTab('tab-productos')">🧾 Productos</button>
+    </div>
+
+    @* ════════════════════════════════════════════════════ *@
+    @* ██ TAB: LISTADO DE COMPRAS                         *@
+    @* ════════════════════════════════════════════════════ *@
+    <div id="tab-compras" class="tab-panel active">
+        <div class="card-dark">
+            <h5>📦 Compras Registradas</h5>
+            <div class="table-wrapper">
+                <table class="table-dark-custom">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Proveedor/Empresa</th>
+                            <th>Gerente</th>
+                            <th>Entrega Probable</th>
+                            <th>Estado</th>
+                            <th>Creada</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in Model.Compras)
+                        {
+                            <tr class="compra-row" onclick="toggleDetalle(@c.Id)">
+                                <td><strong>#@c.Id</strong></td>
+                                <td>@c.NombreProveedor</td>
+                                <td>@(c.Gerente ?? "-")</td>
+                                <td>@(c.FechaEntregaProbable.HasValue ? c.FechaEntregaProbable.Value.ToString("dd/MM/yyyy") : "-")</td>
+                                <td>
+                                    <span class="@(c.Estado == "RECIBIDO" ? "badge-recibido" : "badge-pendiente")">
+                                        @c.Estado
+                                    </span>
+                                </td>
+                                <td>@(c.FechaCreacion.HasValue ? c.FechaCreacion.Value.ToString("dd/MM/yyyy HH:mm") : "-")</td>
+                                <td onclick="event.stopPropagation()">
+                                    <button class="btn-edit-custom" onclick="abrirEditarCompra(@c.Id, @c.ProveedorId, '@c.FechaEntregaProbable?.ToString("yyyy-MM-dd")', '@c.Gerente', '@c.Estado')">
+                                        ✏️ Editar
+                                    </button>
+                                    <form method="post" action="@Url.Action("EliminarCompra","Compras")" class="d-inline" onsubmit="return confirm('¿Eliminar compra #@c.Id?')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@c.Id" />
+                                        <button type="submit" class="btn-danger-custom">🗑️</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            @* Fila expandible con el detalle *@
+                            <tr id="detalle-@c.Id" class="detalle-container">
+                                <td colspan="7" style="padding:0 1rem 1rem 2rem">
+                                    <div class="detalle-section">
+                                        <strong style="font-size:.8rem;color:var(--color-muted);text-transform:uppercase;letter-spacing:.5px">
+                                            Detalle de Productos
+                                        </strong>
+                                        @if (c.Detalles.Any())
+                                        {
+                                            @foreach (var d in c.Detalles)
+                                            {
+                                                <div class="detalle-row" id="det-row-@d.Id">
+                                                    <span style="flex:1">@d.NombreProducto</span>
+                                                    <span style="width:80px;text-align:center;color:var(--color-accent)">x @d.Cantidad</span>
+                                                    <button class="btn-edit-custom" onclick="abrirEditDetalle(@d.Id, @d.ProductoId, @d.Cantidad)">✏️</button>
+                                                    <form method="post" action="@Url.Action("EliminarDetalle","Compras")" class="d-inline" onsubmit="return confirm('¿Eliminar esta línea?')">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@d.Id" />
+                                                        <button type="submit" class="btn-danger-custom">🗑️</button>
+                                                    </form>
+                                                    @* Mini form editar detalle *@
+                                                    <div id="edit-det-@d.Id" class="inline-edit-form" style="position:absolute;z-index:10;min-width:300px">
+                                                        <form method="post" action="@Url.Action("EditarDetalle","Compras")">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="id" value="@d.Id" />
+                                                            <div class="form-grid form-grid-2">
+                                                                <div>
+                                                                    <label class="form-label">Producto</label>
+                                                                    <select name="productoId" class="form-control-dark" id="edet-prod-@d.Id">
+                                                                        @foreach (var p in Model.Productos)
+                                                                        {
+                                                                           <option value="@p.Id" selected="@(p.Id == d.ProductoId)">@p.Nombre</option>}
+                                                                    </select>
+                                                                </div>
+                                                                <div>
+                                                                    <label class="form-label">Cantidad</label>
+                                                                    <input type="number" name="cantidad" min="1" class="form-control-dark" id="edet-qty-@d.Id" value="@d.Cantidad" />
+                                                                </div>
+                                                            </div>
+                                                            <div style="margin-top:.75rem;display:flex;gap:.5rem">
+                                                                <button type="submit" class="btn-sm-success">💾 Guardar</button>
+                                                                <button type="button" class="btn-danger-custom" onclick="cerrarEditDetalle(@d.Id)">Cancelar</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <p style="color:var(--color-muted);font-size:.85rem;margin:.5rem 0">Sin productos en esta compra.</p>
+                                        }
+                                        @* Agregar producto a esta compra *@
+                                        <div style="margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--color-border)">
+                                            <form method="post" action="@Url.Action("AgregarDetalle","Compras")" style="display:flex;gap:.5rem;align-items:flex-end;flex-wrap:wrap">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="compraId" value="@c.Id" />
+                                                <div>
+                                                    <label class="form-label">Producto</label>
+                                                    <select name="productoId" class="form-control-dark">
+                                                        @foreach (var p in Model.Productos)
+                                                        {
+                                                            <option value="@p.Id">@p.Nombre</option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="form-label">Cantidad</label>
+                                                    <input type="number" name="cantidad" min="1" value="1" class="form-control-dark" style="width:90px" />
+                                                </div>
+                                                <button type="submit" class="btn-primary-custom">+ Agregar</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.Compras.Any())
+                        {
+                            <tr>
+                                <td colspan="7" style="text-align:center;padding:2rem;color:var(--color-muted)">
+                                    No hay compras registradas aún.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @* ════════════════════════════════════════════════════ *@
+    @* ██ TAB: NUEVA COMPRA                               *@
+    @* ════════════════════════════════════════════════════ *@
+    <div id="tab-nueva-compra" class="tab-panel">
+        <div class="card-dark">
+            <h5>➕ Registrar Nueva Compra</h5>
+            <form method="post" action="@Url.Action("CrearCompra","Compras")">
+                @Html.AntiForgeryToken()
+
+                <div class="form-grid form-grid-2" style="margin-bottom:1rem">
+                    <div>
+                        <label class="form-label">Proveedor/Empresa *</label>
+                        <select name="ProveedorId" class="form-control-dark" required>
+                            <option value="">-- Seleccionar proveedor --</option>
+                            @foreach (var prov in Model.Proveedores)
+                            {
+                                <option value="@prov.Id">@prov.NombreEmpresa</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Fecha Entrega Probable</label>
+                        <input type="date" name="FechaEntregaProbable" class="form-control-dark" />
+                    </div>
+                </div>
+
+                @* Detalle de productos *@
+                <div style="margin-bottom:1rem">
+                    <label class="form-label" style="margin-bottom:.75rem">Productos de la Compra *</label>
+                    <div id="lineas-productos">
+                        <div class="linea">
+                            <select name="productoIds" class="form-control-dark" required>
+                                <option value="">-- Seleccionar producto --</option>
+                                @foreach (var p in Model.Productos)
+                                {
+                                    <option value="@p.Id">@p.Nombre</option>
+                                }
+                            </select>
+                            <input type="number" name="cantidades" min="1" value="1" class="form-control-dark" placeholder="Cantidad" style="max-width:120px" />
+                            <button type="button" class="btn-danger-custom" onclick="this.parentElement.remove()">✕</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-edit-custom" onclick="agregarLinea()" style="margin-top:.5rem">
+                        + Agregar otra línea
+                    </button>
+                </div>
+
+                <button type="submit" class="btn-primary-custom">💾 Crear Compra</button>
+            </form>
+        </div>
+    </div>
+
+    @* ════════════════════════════════════════════════════ *@
+    @* ██ TAB: PROVEEDORES                                *@
+    @* ════════════════════════════════════════════════════ *@
+    <div id="tab-proveedores" class="tab-panel">
+        <div class="card-dark">
+            <h5>🏢 Nuevo Proveedor</h5>
+            <form method="post" action="@Url.Action("CrearProveedor","Compras")">
+                @Html.AntiForgeryToken()
+                <div class="form-grid form-grid-3" style="margin-bottom:1rem">
+                    <div>
+                        <label class="form-label">Nombre Empresa/Proveedores *</label>
+                        <input type="text" name="NombreEmpresa" class="form-control-dark" required maxlength="150" />
+                    </div>
+                    <div>
+                        <label class="form-label">Teléfono</label>
+                        <input type="text" name="Telefono" class="form-control-dark" maxlength="20" />
+                    </div>
+                    <div>
+                        <label class="form-label">Descripción</label>
+                        <input type="text" name="Descripcion" class="form-control-dark" />
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary-custom">💾 Guardar Proveedor</button>
+            </form>
+        </div>
+
+        <div class="card-dark">
+            <h5>📋 Proveedores Registrados</h5>
+            <div class="table-wrapper">
+                <table class="table-dark-custom">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Empresa</th>
+                            <th>Teléfono</th>
+                            <th>Descripción</th>
+                            <th>Creado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var prov in Model.Proveedores)
+                        {
+                            <tr>
+                                <td>@prov.Id</td>
+                                <td id="pnombre-@prov.Id">@prov.NombreEmpresa</td>
+                                <td id="ptel-@prov.Id">@(prov.Telefono ?? "-")</td>
+                                <td id="pdesc-@prov.Id">@(prov.Descripcion ?? "-")</td>
+                                <td>@(prov.FechaCreacion?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td>
+                                    <button class="btn-edit-custom" onclick="abrirEditarProveedor(@prov.Id, '@prov.NombreEmpresa.Replace("'","\\'")', '@(prov.Telefono ?? "")', '@(prov.Descripcion?.Replace("'","\\'")?? "")')">
+                                        ✏️ Editar
+                                    </button>
+                                    <form method="post" action="@Url.Action("EliminarProveedor","Compras")" class="d-inline" onsubmit="return confirm('¿Eliminar proveedor?')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@prov.Id" />
+                                        <button type="submit" class="btn-danger-custom">🗑️</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.Proveedores.Any())
+                        {
+                            <tr><td colspan="6" style="text-align:center;color:var(--color-muted);padding:1.5rem">No hay proveedores registrados.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @* ════════════════════════════════════════════════════ *@
+    @* ██ TAB: PRODUCTOS                                  *@
+    @* ════════════════════════════════════════════════════ *@
+    <div id="tab-productos" class="tab-panel">
+        <div class="card-dark">
+            <h5>🧾 Nuevo Producto</h5>
+            <form method="post" action="@Url.Action("CrearProducto","Compras")">
+                @Html.AntiForgeryToken()
+                <div class="form-grid form-grid-2" style="margin-bottom:1rem">
+                    <div>
+                        <label class="form-label">Nombre Producto *</label>
+                        <input type="text" name="Nombre" class="form-control-dark" required maxlength="150" />
+                    </div>
+                    <div>
+                        <label class="form-label">Inventario Actual</label>
+                        <input type="number" name="InventarioActual" class="form-control-dark" min="0" value="0" />
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary-custom">💾 Guardar Producto</button>
+            </form>
+        </div>
+
+        <div class="card-dark">
+            <h5>📋 Productos Registrados</h5>
+            <div class="table-wrapper">
+                <table class="table-dark-custom">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Nombre</th>
+                            <th>Inventario</th>
+                            <th>Creado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var prod in Model.Productos)
+                        {
+                            <tr>
+                                <td>@prod.Id</td>
+                                <td>@prod.Nombre</td>
+                                <td>
+                                    <span class="@(prod.InventarioActual == 0 ? "badge-pendiente" : "badge-recibido")">
+                                        @prod.InventarioActual
+                                    </span>
+                                </td>
+                                <td>@(prod.FechaCreacion?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                <td>
+                                    <button class="btn-edit-custom" onclick="abrirEditarProducto(@prod.Id, '@prod.Nombre.Replace("'","\\'")', @prod.InventarioActual)">
+                                        ✏️ Editar
+                                    </button>
+                                    <form method="post" action="@Url.Action("EliminarProducto","Compras")" class="d-inline" onsubmit="return confirm('¿Eliminar producto?')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@prod.Id" />
+                                        <button type="submit" class="btn-danger-custom">🗑️</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.Productos.Any())
+                        {
+                            <tr><td colspan="5" style="text-align:center;color:var(--color-muted);padding:1.5rem">No hay productos registrados.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@* ════════════════════════════════════════════════════════════════════════ *@
+@* ██ MODALES INLINE (Edit Compra / Proveedor / Producto)                 *@
+@* ════════════════════════════════════════════════════════════════════════ *@
+
+@* Modal Editar Compra *@
+<div id="modal-compra" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center">
+    <div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:2rem;max-width:540px;width:95%;box-shadow:var(--shadow)">
+        <h5 style="color:var(--color-accent);margin-bottom:1.5rem;font-weight:700">✏️ Editar Compra</h5>
+        <form method="post" action="@Url.Action("EditarCompra","Compras")">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="Id" id="ec-id" />
+            <div class="form-grid form-grid-2" style="margin-bottom:1rem">
+                <div>
+                    <label class="form-label">Proveedor *</label>
+                    <select name="ProveedorId" id="ec-prov" class="form-control-dark" required>
+                        @foreach (var prov in Model.Proveedores)
+                        {
+                            <option value="@prov.Id">@prov.NombreEmpresa</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Fecha Entrega</label>
+                    <input type="date" name="FechaEntregaProbable" id="ec-fecha" class="form-control-dark" />
+                </div>
+                <div>
+                    <label class="form-label">Gerente</label>
+                    <input type="text" name="Gerente" id="ec-gerente" class="form-control-dark" />
+                </div>
+                <div>
+                    <label class="form-label">Estado</label>
+                    <select name="Estado" id="ec-estado" class="form-control-dark">
+                        <option value="PENDIENTE">PENDIENTE</option>
+                        <option value="RECIBIDO">RECIBIDO</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display:flex;gap:.75rem">
+                <button type="submit" class="btn-primary-custom">💾 Guardar</button>
+                <button type="button" class="btn-danger-custom" onclick="cerrarModal('modal-compra')">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@* Modal Editar Proveedor *@
+<div id="modal-proveedor" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center">
+    <div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:2rem;max-width:500px;width:95%;box-shadow:var(--shadow)">
+        <h5 style="color:var(--color-accent);margin-bottom:1.5rem;font-weight:700">✏️ Editar Proveedor</h5>
+        <form method="post" action="@Url.Action("EditarProveedor","Compras")">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="Id" id="ep-id" />
+            <div class="form-grid" style="margin-bottom:1rem">
+                <div>
+                    <label class="form-label">Nombre Empresa *</label>
+                    <input type="text" name="NombreEmpresa" id="ep-nombre" class="form-control-dark" required />
+                </div>
+                <div>
+                    <label class="form-label">Teléfono</label>
+                    <input type="text" name="Telefono" id="ep-telefono" class="form-control-dark" />
+                </div>
+                <div>
+                    <label class="form-label">Descripción</label>
+                    <textarea name="Descripcion" id="ep-desc" class="form-control-dark" rows="2"></textarea>
+                </div>
+            </div>
+            <div style="display:flex;gap:.75rem">
+                <button type="submit" class="btn-primary-custom">💾 Guardar</button>
+                <button type="button" class="btn-danger-custom" onclick="cerrarModal('modal-proveedor')">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@* Modal Editar Producto *@
+<div id="modal-producto" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center">
+    <div style="background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius);padding:2rem;max-width:400px;width:95%;box-shadow:var(--shadow)">
+        <h5 style="color:var(--color-accent);margin-bottom:1.5rem;font-weight:700">✏️ Editar Producto</h5>
+        <form method="post" action="@Url.Action("EditarProducto","Compras")">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="Id" id="eprod-id" />
+            <div class="form-grid" style="margin-bottom:1rem">
+                <div>
+                    <label class="form-label">Nombre *</label>
+                    <input type="text" name="Nombre" id="eprod-nombre" class="form-control-dark" required />
+                </div>
+                <div>
+                    <label class="form-label">Inventario Actual</label>
+                    <input type="number" name="InventarioActual" id="eprod-inv" class="form-control-dark" min="0" />
+                </div>
+            </div>
+            <div style="display:flex;gap:.75rem">
+                <button type="submit" class="btn-primary-custom">💾 Guardar</button>
+                <button type="button" class="btn-danger-custom" onclick="cerrarModal('modal-producto')">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+// ─── TABS ───────────────────────────────────────────────
+function showTab(id) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+}
+
+// ─── DETALLE TOGGLE ────────────────────────────────────
+function toggleDetalle(id) {
+    const row = document.getElementById('detalle-' + id);
+    row.classList.toggle('open');
+}
+
+// ─── MODALES ────────────────────────────────────────────
+function abrirModal(id) {
+    const m = document.getElementById(id);
+    m.style.display = 'flex';
+}
+function cerrarModal(id) {
+    document.getElementById(id).style.display = 'none';
+}
+// Cerrar al click fuera
+document.querySelectorAll('[id^="modal-"]').forEach(m => {
+    m.addEventListener('click', function(e) {
+        if (e.target === this) cerrarModal(this.id);
+    });
+});
+
+// ─── EDITAR COMPRA ─────────────────────────────────────
+function abrirEditarCompra(id, provId, fecha, gerente, estado) {
+    document.getElementById('ec-id').value = id;
+    document.getElementById('ec-prov').value = provId;
+    document.getElementById('ec-fecha').value = fecha || '';
+    document.getElementById('ec-gerente').value = gerente || '';
+    document.getElementById('ec-estado').value = estado;
+    abrirModal('modal-compra');
+}
+
+// ─── EDITAR PROVEEDOR ──────────────────────────────────
+function abrirEditarProveedor(id, nombre, telefono, desc) {
+    document.getElementById('ep-id').value = id;
+    document.getElementById('ep-nombre').value = nombre;
+    document.getElementById('ep-telefono').value = telefono || '';
+    document.getElementById('ep-desc').value = desc || '';
+    abrirModal('modal-proveedor');
+}
+
+// ─── EDITAR PRODUCTO ───────────────────────────────────
+function abrirEditarProducto(id, nombre, inv) {
+    document.getElementById('eprod-id').value = id;
+    document.getElementById('eprod-nombre').value = nombre;
+    document.getElementById('eprod-inv').value = inv;
+    abrirModal('modal-producto');
+}
+
+// ─── EDITAR DETALLE INLINE ─────────────────────────────
+function abrirEditDetalle(id, pid, qty) {
+    document.querySelectorAll('.inline-edit-form').forEach(f => f.classList.remove('open'));
+    document.getElementById('edit-det-' + id).classList.add('open');
+}
+function cerrarEditDetalle(id) {
+    document.getElementById('edit-det-' + id).classList.remove('open');
+}
+
+// ─── AGREGAR LÍNEA PRODUCTO EN NUEVA COMPRA ────────────
+function agregarLinea() {
+    const container = document.getElementById('lineas-productos');
+    const primera = container.querySelector('.linea');
+    const nueva = primera.cloneNode(true);
+    nueva.querySelector('select').value = '';
+    nueva.querySelector('input[type="number"]').value = 1;
+    container.appendChild(nueva);
+}
+</script>
+}

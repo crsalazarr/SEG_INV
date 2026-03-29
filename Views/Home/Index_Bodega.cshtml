@@ -1,0 +1,545 @@
+@model SEG_INV.Models.BodegaViewModel
+@{
+    ViewData["Title"] = "Recepción de Bodega";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@* ─── ESTILOS PERSONALIZADOS (mismo estilo que Compras) ─── *@
+<style>
+    :root {
+        --color-bg: #0f1117;
+        --color-surface: #1a1d27;
+        --color-surface2: #21253a;
+        --color-border: #2e3350;
+        --color-accent: #4f8ef7;
+        --color-accent2: #7c5cfc;
+        --color-success: #22c55e;
+        --color-danger: #ef4444;
+        --color-warning: #f59e0b;
+        --color-text: #e2e8f0;
+        --color-muted: #7b87a0;
+        --radius: 12px;
+        --shadow: 0 4px 24px rgba(0,0,0,.4);
+    }
+
+    body { background: var(--color-bg); color: var(--color-text); font-family: 'Segoe UI', system-ui, sans-serif; }
+    .page-wrapper { max-width: 1600px; margin: 0 auto; padding: 1.5rem; }
+
+    /* ── TOP BAR (igual que compras) ── */
+    .topbar {
+        display: flex; align-items: center; justify-content: space-between;
+        background: var(--color-surface); border: 1px solid var(--color-border);
+        border-radius: var(--radius); padding: 1rem 1.5rem; margin-bottom: 1.5rem;
+    }
+    .topbar-title { font-size: 1.4rem; font-weight: 700; letter-spacing: -.5px; }
+    .topbar-title span { color: var(--color-accent); }
+    .topbar-user { font-size: .85rem; color: var(--color-muted); }
+
+    /* ── ALERTAS ── */
+    .alert-custom {
+        padding: .75rem 1.25rem; border-radius: 8px; margin-bottom: 1rem;
+        font-size: .9rem; font-weight: 500;
+    }
+    .alert-success { background: rgba(34,197,94,.15); border: 1px solid rgba(34,197,94,.4); color: #86efac; }
+    .alert-danger  { background: rgba(239,68,68,.15);  border: 1px solid rgba(239,68,68,.4);  color: #fca5a5; }
+
+    /* ── CARDS (igual que compras) ── */
+    .card-dark {
+        background: var(--color-surface); border: 1px solid var(--color-border);
+        border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem;
+        box-shadow: var(--shadow);
+    }
+    .card-dark-header {
+        padding: 1rem 1.5rem; border-bottom: 1px solid var(--color-border);
+        font-weight: 700; color: var(--color-accent); text-transform: uppercase; letter-spacing: .5px;
+    }
+
+    /* ── BOTONES (mismos estilos que compras) ── */
+    .btn-primary-custom {
+        padding: .6rem 1.2rem; border-radius: 8px; border: none;
+        background: var(--color-accent); color: #fff; font-weight: 600;
+        font-size: .88rem; cursor: pointer; transition: opacity .2s;
+    }
+    .btn-primary-custom:hover { opacity: .85; }
+    .btn-danger-custom {
+        padding: .4rem .8rem; border-radius: 6px; border: none;
+        background: rgba(239,68,68,.15); color: #fca5a5; font-size: .8rem;
+        cursor: pointer; transition: background .2s;
+    }
+    .btn-danger-custom:hover { background: rgba(239,68,68,.35); }
+    .btn-success-custom {
+        padding: .6rem 1.2rem; border-radius: 8px; border: none;
+        background: rgba(34,197,94,.15); color: #86efac; font-weight: 600;
+        font-size: .88rem; cursor: pointer; transition: background .2s;
+    }
+    .btn-success-custom:hover { background: rgba(34,197,94,.35); }
+    .btn-warning-custom {
+        padding: .6rem 1.2rem; border-radius: 8px; border: none;
+        background: rgba(245,158,11,.15); color: #fcd34d; font-weight: 600;
+        font-size: .88rem; cursor: pointer; transition: background .2s;
+    }
+    .btn-warning-custom:hover { background: rgba(245,158,11,.35); }
+
+    /* ── PEDIDOS LIST ── */
+    .pedidos-list {
+        max-height: 70vh; overflow-y: auto; padding-right: .5rem;
+    }
+    .pedido-card {
+        background: var(--color-surface2); border: 1px solid var(--color-border);
+        border-radius: 8px; padding: 1rem; margin-bottom: .75rem;
+        cursor: pointer; transition: all .2s; border-left: 4px solid transparent;
+    }
+    .pedido-card:hover {
+        background: rgba(79,142,247,.1); border-color: var(--color-accent);
+    }
+    .pedido-card.selected {
+        background: rgba(79,142,247,.15); border-left-color: var(--color-accent);
+    }
+    .pedido-card.vencido { border-left-color: var(--color-danger); }
+    .pedido-card.hoy { border-left-color: var(--color-warning); }
+    .pedido-card.novedad { border-left-color: #f59e0b; }
+
+    /* ── BADGES ── */
+    .badge-estado {
+        padding: .25rem .6rem; border-radius: 99px; font-size: .75rem; font-weight: 600;
+    }
+    .badge-pendiente { background: rgba(245,158,11,.2); color: #fcd34d; }
+    .badge-recibido  { background: rgba(34,197,94,.2);  color: #86efac; }
+    .badge-novedad   { background: rgba(239,68,68,.2);  color: #fca5a5; }
+
+    /* ── DETALLE CHIP ── */
+    .detalle-chip {
+        display: inline-block; background: var(--color-surface);
+        border: 1px solid var(--color-border); border-radius: 20px;
+        padding: 2px 10px; font-size: .75rem; margin: 2px; color: var(--color-muted);
+    }
+
+    /* ── FORM RECEPCIÓN ── */
+    .form-recepcion {
+        background: var(--color-surface2); border-radius: 8px;
+        padding: 1.5rem; border: 1px solid var(--color-border);
+    }
+    .toggle-llego {
+        display: flex; gap: 12px; align-items: center;
+    }
+    .btn-llego-si, .btn-llego-no {
+        flex: 1; padding: 12px; border-radius: 8px; font-size: 1rem;
+        font-weight: 600; transition: all .2s; cursor: pointer;
+        border: 2px solid transparent;
+    }
+    .btn-llego-si.active {
+        background: var(--color-success); color: #fff; border-color: var(--color-success);
+    }
+    .btn-llego-si:not(.active) {
+        background: transparent; color: var(--color-success); border: 2px solid var(--color-success);
+    }
+    .btn-llego-no.active {
+        background: var(--color-danger); color: #fff; border-color: var(--color-danger);
+    }
+    .btn-llego-no:not(.active) {
+        background: transparent; color: var(--color-danger); border: 2px solid var(--color-danger);
+    }
+
+    /* ── FORMULARIOS (mismos estilos que compras) ── */
+    .form-grid { display: grid; gap: .75rem; }
+    .form-grid-2 { grid-template-columns: repeat(2, 1fr); }
+
+    .form-label {
+        font-size: .78rem; font-weight: 600; color: var(--color-muted);
+        margin-bottom: .3rem; display: block; text-transform: uppercase; letter-spacing: .4px;
+    }
+    .form-control-dark {
+        width: 100%; padding: .6rem .9rem; border-radius: 8px;
+        background: var(--color-surface); border: 1px solid var(--color-border);
+        color: var(--color-text); font-size: .9rem; transition: border-color .2s;
+    }
+    .form-control-dark:focus { outline: none; border-color: var(--color-accent); }
+    .form-control-dark::placeholder { color: var(--color-muted); opacity: .5; }
+
+    /* ── TABLAS ── */
+    .table-dark-custom { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    .table-dark-custom th {
+        padding: .75rem 1rem; text-align: left; font-size: .75rem;
+        font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+        color: var(--color-muted); border-bottom: 1px solid var(--color-border);
+    }
+    .table-dark-custom td {
+        padding: .75rem 1rem; border-bottom: 1px solid rgba(46,51,80,.5);
+        vertical-align: middle;
+    }
+    .table-dark-custom tr:hover td { background: rgba(79,142,247,.05); }
+
+    /* ── NOVEDADES BLOCK ── */
+    .novedades-block {
+        display: none; margin-top: 1rem;
+    }
+    .novedades-block.required-visible {
+        display: block;
+    }
+
+    /* ── UTILIDADES ── */
+    .text-accent { color: var(--color-accent); }
+    .text-muted-custom { color: var(--color-muted); }
+
+    /* ── RESPONSIVE ── */
+    @@media (max-width: 768px) {
+        .form-grid-2 { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="page-wrapper">
+
+    @* ── TOP BAR (igual que compras) ── *@
+    <div class="topbar">
+        <div class="topbar-title">
+            <i class="bi bi-box-seam" style="margin-right: 8px;"></i>Recepción de <span>Bodega</span>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <div class="topbar-user">👤 @ViewBag.NombreUsuario &nbsp;|&nbsp; @ViewBag.Rol</div>
+            <a href="@Url.Action("Logout","Account")" class="btn-danger-custom">Salir</a>
+        </div>
+    </div>
+
+    @* ── ALERTAS ── *@
+    @if (TempData["Exito"] != null)
+    {
+        <div class="alert-custom alert-success">✅ @TempData["Exito"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert-custom alert-danger">❌ @TempData["Error"]</div>
+    }
+
+    <div class="row g-4">
+
+        @* ════════════════════════════════════════════════════ *@
+        @* COLUMNA IZQUIERDA: LISTA DE PEDIDOS                 *@
+        @* ════════════════════════════════════════════════════ *@
+        <div class="col-lg-5">
+            <div class="card-dark" style="padding: 0; overflow: hidden;">
+                <div class="card-dark-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-truck me-2"></i>Pedidos por recibir</span>
+                    <span class="badge" style="background: var(--color-accent); color: #fff; padding: .25rem .8rem;">
+                        @Model.PedidosPendientes.Count
+                    </span>
+                </div>
+                <div class="pedidos-list p-3">
+                    @if (!Model.PedidosPendientes.Any())
+                    {
+                        <div class="text-center text-muted-custom py-5">
+                            <i class="bi bi-check2-all" style="font-size: 3rem;"></i>
+                            <p class="mt-2">No hay pedidos pendientes por recibir.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var pedido in Model.PedidosPendientes)
+                        {
+                            bool esVencido = pedido.FechaEntregaProbable.HasValue && pedido.FechaEntregaProbable.Value.Date < DateTime.Today;
+                            bool esHoy = pedido.FechaEntregaProbable.HasValue && pedido.FechaEntregaProbable.Value.Date == DateTime.Today;
+                            bool esNovedad = pedido.Estado == "NOVEDAD";
+
+                            string cardClass = esNovedad ? "novedad" : (esVencido ? "vencido" : (esHoy ? "hoy" : ""));
+
+                            <div class="pedido-card @cardClass" 
+                                 onclick="seleccionarPedido(@pedido.Id, '@pedido.NombreProveedor')"
+                                 id="card-pedido-@pedido.Id">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <div class="fw-bold">@pedido.NombreProveedor</div>
+                                        <small class="text-muted-custom">Pedido #@pedido.Id</small>
+                                    </div>
+                                    <span class="badge-estado @(pedido.Estado == "PENDIENTE" ? "badge-pendiente" : pedido.Estado == "NOVEDAD" ? "badge-novedad" : "badge-recibido")">
+                                        @pedido.Estado
+                                    </span>
+                                </div>
+
+                                @if (pedido.FechaEntregaProbable.HasValue)
+                                {
+                                    <div class="mb-2">
+                                        @if (esVencido)
+                                        {
+                                            <small class="text-danger">
+                                                <i class="bi bi-calendar-x"></i> Vence: @pedido.FechaEntregaProbable.Value.ToString("dd/MM/yyyy")
+                                            </small>
+                                        }
+                                        else if (esHoy)
+                                        {
+                                            <small class="text-warning">
+                                                <i class="bi bi-calendar-check"></i> HOY
+                                            </small>
+                                        }
+                                        else
+                                        {
+                                            <small class="text-muted-custom">
+                                                <i class="bi bi-calendar2"></i> @pedido.FechaEntregaProbable.Value.ToString("dd/MM/yyyy")
+                                            </small>
+                                        }
+                                    </div>
+                                }
+
+                                <div>
+                                    @foreach (var det in pedido.Detalles)
+                                    {
+                                        <span class="detalle-chip">@det.NombreProducto × @det.Cantidad</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        @* ════════════════════════════════════════════════════ *@
+        @* COLUMNA DERECHA: FORMULARIO + HISTORIAL             *@
+        @* ════════════════════════════════════════════════════ *@
+        <div class="col-lg-7">
+
+            @* ── FORMULARIO DE RECEPCIÓN ── *@
+            <div class="card-dark">
+                <h5 style="margin-bottom: 1rem;">
+                    <i class="bi bi-clipboard-check me-2"></i>Registrar Recepción
+                    <small id="subtitulo-pedido" class="text-muted-custom ms-2" style="font-size: .85rem;"></small>
+                </h5>
+
+                @* Instrucción inicial *@
+                <div id="instruccion-inicial" class="text-center py-5">
+                    <i class="bi bi-arrow-left" style="font-size: 3rem; color: var(--color-muted);"></i>
+                    <p class="mt-2 text-muted-custom">Selecciona un pedido de la lista para registrar su recepción.</p>
+                </div>
+
+                @* Formulario (oculto hasta seleccionar) *@
+                <div id="form-recepcion-container" style="display: none;">
+                    <form method="post" action="@Url.Action("RegistrarRecepcion", "Bodega")">
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden" name="CompraId" id="input-compra-id" />
+
+                        @* ¿LLEGÓ? TOGGLE *@
+                        <div class="mb-4">
+                            <label class="form-label">¿El pedido llegó completo?</label>
+                            <div class="toggle-llego">
+                                <button type="button" class="btn-llego-si active" id="btn-si" onclick="toggleLlego(true)">
+                                    <i class="bi bi-check-circle me-1"></i> Sí, llegó completo
+                                </button>
+                                <button type="button" class="btn-llego-no" id="btn-no" onclick="toggleLlego(false)">
+                                    <i class="bi bi-x-circle me-1"></i> No / Incompleto
+                                </button>
+                            </div>
+                            <input type="hidden" name="LlegoCompleto" id="input-llego" value="true" />
+                        </div>
+
+                        <div class="form-grid form-grid-2 mb-3">
+                            <div>
+                                <label class="form-label">Fecha Recibido</label>
+                                <input type="date" class="form-control-dark" name="FechaRecibido"
+                                       value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                            </div>
+                            <div>
+                                <label class="form-label">Hora</label>
+                                <input type="time" class="form-control-dark" name="Hora"
+                                       value="@DateTime.Now.ToString("HH:mm")" />
+                            </div>
+                        </div>
+
+                        <div class="form-grid form-grid-2 mb-3">
+                            <div>
+                                <label class="form-label">N° Factura</label>
+                                <input type="text" class="form-control-dark" name="Factura"
+                                       placeholder="Ej: FAC-00123" />
+                            </div>
+                            <div>
+                                <label class="form-label">Cantidad Bultos</label>
+                                <input type="number" class="form-control-dark" name="CantidadBultos"
+                                       min="0" placeholder="0" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Quien Recibe</label>
+                            <input type="text" class="form-control-dark" name="QuienRecibe"
+                                   value="@ViewBag.NombreUsuario" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Contenido / Descripción</label>
+                            <textarea class="form-control-dark" name="Contenido" rows="2"
+                                      placeholder="Descripción del contenido..."></textarea>
+                        </div>
+
+                        @* Novedades (obligatorio si no llegó) *@
+                        <div class="novedades-block" id="novedades-block">
+                            <label class="form-label" style="color: var(--color-danger);">
+                                <i class="bi bi-exclamation-triangle me-1"></i>Novedades / Motivo *
+                            </label>
+                            <textarea class="form-control-dark" name="Novedades" rows="3"
+                                      id="textarea-novedades" placeholder="Describe qué pasó..."></textarea>
+                        </div>
+
+                        @* Novedades opcional (si llegó) *@
+                        <div class="mb-3" id="novedades-opcionales-block" style="display: block;">
+                            <label class="form-label">Observaciones (opcional)</label>
+                            <textarea class="form-control-dark" name="Novedades" rows="2"
+                                      placeholder="Observaciones adicionales..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn-primary-custom w-100" id="btn-submit" style="padding: .8rem;">
+                            <i class="bi bi-save me-1"></i> Registrar Recepción
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            @* ── HISTORIAL DE RECEPCIONES ── *@
+            <div class="card-dark">
+                <h5 style="margin-bottom: 1rem;">
+                    <i class="bi bi-clock-history me-2"></i>Últimas Recepciones
+                    <span class="badge" style="background: var(--color-surface2); color: var(--color-text); margin-left: .5rem;">
+                        @Model.RecepcionesRegistradas.Count
+                    </span>
+                </h5>
+
+                <div class="table-wrapper" style="max-height: 350px; overflow-y: auto;">
+                    <table class="table-dark-custom">
+                        <thead style="position: sticky; top: 0; background: var(--color-surface);">
+                            <tr>
+                                <th>#</th>
+                                <th>Proveedor</th>
+                                <th>Fecha</th>
+                                <th>Factura</th>
+                                <th>Bultos</th>
+                                <th>Recibió</th>
+                                <th>Estado</th>
+                                @if (ViewBag.Rol == "GERENTE")
+                                {
+                                    <th></th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var rec in Model.RecepcionesRegistradas)
+                            {
+                                bool tieneNovedad = !string.IsNullOrEmpty(rec.Novedades) && 
+                                                   (rec.Novedades.Contains("no llegó") || rec.Novedades.Contains("incompleto"));
+
+                                <tr>
+                                    <td><strong>#@rec.CompraId</strong></td>
+                                    <td>
+                                        <div style="max-width:130px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+                                             title="@rec.NombreProveedor">
+                                            @rec.NombreProveedor
+                                        </div>
+                                    </td>
+                                    <td>@(rec.FechaRecibido.HasValue ? rec.FechaRecibido.Value.ToString("dd/MM/yy") : "-")</td>
+                                    <td>@(rec.Factura ?? "-")</td>
+                                    <td>@(rec.CantidadBultos?.ToString() ?? "-")</td>
+                                    <td>@(rec.QuienRecibe ?? "-")</td>
+                                    <td>
+                                        @if (tieneNovedad)
+                                        {
+                                            <span class="badge-estado badge-novedad">Novedad</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge-estado badge-recibido">Recibido</span>
+                                        }
+                                    </td>
+                                    @if (ViewBag.Rol == "GERENTE")
+                                    {
+                                        <td>
+                                            <form method="post" action="@Url.Action("EliminarRecepcion", "Bodega")" 
+                                                  onsubmit="return confirm('¿Eliminar esta recepción? El pedido volverá a PENDIENTE.')">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@rec.Id" />
+                                                <input type="hidden" name="compraId" value="@rec.CompraId" />
+                                                <button type="submit" class="btn-danger-custom" style="padding: .2rem .5rem;">
+                                                    🗑️
+                                                </button>
+                                            </form>
+                                        </td>
+                                    }
+                                </tr>
+                                @if (!string.IsNullOrWhiteSpace(rec.Novedades))
+                                {
+                                    <tr>
+                                        <td colspan="@(ViewBag.Rol == "GERENTE" ? 8 : 7)" style="padding: 0 1rem 1rem 2rem;">
+                                            <small class="text-muted-custom">
+                                                <i class="bi bi-chat-left-text me-1"></i>@rec.Novedades
+                                            </small>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            @if (!Model.RecepcionesRegistradas.Any())
+                            {
+                                <tr>
+                                    <td colspan="@(ViewBag.Rol == "GERENTE" ? 8 : 7)" style="text-align: center; padding: 2rem; color: var(--color-muted);">
+                                        No hay recepciones registradas aún.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let llegoCompleto = true;
+
+        function seleccionarPedido(id, proveedor) {
+            // Quitar selección anterior
+            document.querySelectorAll('.pedido-card').forEach(c => c.classList.remove('selected'));
+            // Seleccionar card actual
+            const card = document.getElementById('card-pedido-' + id);
+            if (card) card.classList.add('selected');
+
+            // Asignar valores
+            document.getElementById('input-compra-id').value = id;
+            document.getElementById('subtitulo-pedido').textContent = '— Pedido #' + id + ' · ' + proveedor;
+
+            // Mostrar formulario, ocultar instrucción
+            document.getElementById('instruccion-inicial').style.display = 'none';
+            document.getElementById('form-recepcion-container').style.display = 'block';
+        }
+
+        function toggleLlego(valor) {
+            llegoCompleto = valor;
+            document.getElementById('input-llego').value = valor;
+
+            // Actualizar botones
+            document.getElementById('btn-si').classList.toggle('active', valor);
+            document.getElementById('btn-no').classList.toggle('active', !valor);
+
+            // Controlar visibilidad de novedades
+            if (valor) {
+                document.getElementById('novedades-block').classList.remove('required-visible');
+                document.getElementById('novedades-opcionales-block').style.display = 'block';
+                // Limpiar campo de novedades obligatorio si estaba lleno
+                document.getElementById('textarea-novedades').value = '';
+            } else {
+                document.getElementById('novedades-block').classList.add('required-visible');
+                document.getElementById('novedades-opcionales-block').style.display = 'none';
+            }
+
+            // Cambiar estilo del botón submit
+            const btnSubmit = document.getElementById('btn-submit');
+            if (valor) {
+                btnSubmit.className = 'btn-primary-custom w-100';
+                btnSubmit.innerHTML = '<i class="bi bi-check-circle me-1"></i> Confirmar Recepción';
+            } else {
+                btnSubmit.className = 'btn-warning-custom w-100';
+                btnSubmit.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i> Registrar Novedad';
+            }
+        }
+
+        // Inicializar estado
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleLlego(true);
+        });
+    </script>
+}

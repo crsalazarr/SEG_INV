@@ -1,0 +1,16 @@
+C:\SEG_INV_Publicada\SEG_INV.exe
+C:\SEG_INV_Publicada\appsettings.Development.json
+C:\SEG_INV_Publicada\appsettings.json
+C:\SEG_INV_Publicada\SEG_INV.dll
+C:\SEG_INV_Publicada\SEG_INV.deps.json
+C:\SEG_INV_Publicada\SEG_INV.runtimeconfig.json
+C:\SEG_INV_Publicada\SEG_INV.pdb
+C:\SEG_INV_Publicada\ClosedXML.dll
+C:\SEG_INV_Publicada\ClosedXML.Parser.dll
+C:\SEG_INV_Publicada\DocumentFormat.OpenXml.dll
+C:\SEG_INV_Publicada\DocumentFormat.OpenXml.Framework.dll
+C:\SEG_INV_Publicada\ExcelNumberFormat.dll
+C:\SEG_INV_Publicada\MySqlConnector.dll
+C:\SEG_INV_Publicada\RBush.dll
+C:\SEG_INV_Publicada\SixLabors.Fonts.dll
+C:\SEG_INV_Publicada\System.IO.Packaging.dll
